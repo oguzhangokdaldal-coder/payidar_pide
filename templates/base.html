@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Usta Pide | Sıcak & Taze Pide Siparişi</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap"
+          rel="stylesheet">
+    <link href="/static/css/style.css"
+          rel="stylesheet">
+</head>
+
+<body>
+
+<!-- ================= HEADER ================= -->
+
+<header class="header">
+
+    <div class="container navbar">
+
+        <a href="/" class="logo">
+            <div class="logo-icon">P</div>
+
+            <div class="logo-text">
+                <strong>PAYİDAR PİDE</strong>
+                <span>Gelenekten Geleceğe</span>
+            </div>
+        </a>
+
+        <nav class="nav-menu">
+            <a href="#anasayfa" class="active">Ana Sayfa</a>
+            <a href="#menu">Menü</a>
+            <a href="#kampanyalar">Kampanyalar</a>
+            <a href="#hakkimizda">Hakkımızda</a>
+            <a href="#iletisim">İletişim</a>
+        </nav>
+
+        <div class="nav-actions">
+
+            <a href="tel:05300490432" class="phone">
+                <span>☎️</span>
+                <div>
+                    <small>Sipariş Hattı</small>
+                    <strong>0530 049 04 32</strong>
+                </div>
+            </a>
+
+            <a href="/sepet" class="cart">
+                <span class="cart-icon">🛒</span>
+                <span>Sepet</span>
+                <b>0</b>
+            </a>
+
+        </div>
+
+    </div>
+
+</header>
+<main>
+    {% block  %}
+    {% endblock  %}
+    
+
+</main>
+
+
+
+    <div class="footer-bottom">
+
+        <div class="container">
+
+            <span>
+                © 2026 Usta Pide. Tüm hakları saklıdır.
+            </span>
+
+            <span>
+                Güvenli Online Sipariş
+            </span>
+
+        </div>
+
+    </div>
+
+</footer>
+
+
+</body>
+</html>

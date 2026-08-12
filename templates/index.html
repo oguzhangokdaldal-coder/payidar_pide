@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Usta Pide | Sıcak & Taze Pide Siparişi</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap"
+          rel="stylesheet">
+    <link href="/static/css/style.css"
+          rel="stylesheet">
+</head>
+
+<body>
+
+<!-- ================= HEADER ================= -->
+
+<header class="header">
+
+    <div class="container navbar">
+
+        <a href="/" class="logo">
+            <div class="logo-icon">P</div>
+
+            <div class="logo-text">
+                <strong>PAYİDAR PİDE</strong>
+                <span>Gelenekten Geleceğe</span>
+            </div>
+        </a>
+
+        <nav class="nav-menu">
+            <a href="#anasayfa" class="active">Ana Sayfa</a>
+            <a href="#menu">Menü</a>
+            <a href="#kampanyalar">Kampanyalar</a>
+            <a href="#hakkimizda">Hakkımızda</a>
+            <a href="#iletisim">İletişim</a>
+        </nav>
+
+        <div class="nav-actions">
+
+            <a href="tel:05300490432" class="phone">
+                <span>☎️</span>
+                <div>
+                    <small>Sipariş Hattı</small>
+                    <strong>0530 049 04 32</strong>
+                </div>
+            </a>
+
+            <a href="/sepet" class="cart">
+                <span class="cart-icon">🛒</span>
+                <span>Sepet</span>
+                <b>0</b>
+            </a>
+
+        </div>
+
+    </div>
+
+</header>
+
+
+<!-- ================= HERO ================= -->
+
+<section class="hero" id="anasayfa">
+
+    <div class="hero-overlay"></div>
+
+    <div class="container hero-container">
+
+        <div class="hero-content">
+
+            <span class="hero-label">
+                🔥 FIRINDAN ÇIKTI
+            </span>
+
+            <h1>
+                Gerçek Lezzet,<br>
+                <span>Usta Eller.</span>
+            </h1>
+
+            <p>
+                Geleneksel taş fırın lezzetlerini,
+                kaliteli malzemeler ve usta ellerle
+                sofranıza getiriyoruz.
+            </p>
+
+            <div class="hero-buttons">
+
+                <a href="#menu" class="btn btn-primary">
+                    Menüye Göz At
+                    <span>→</span>
+                </a>
+
+                <a href="/siparis" class="btn btn-outline">
+                    Online Sipariş Ver
+                </a>
+
+            </div>
+
+            <div class="hero-info">
+
+                <div>
+                    <strong>25+</strong>
+                    <span>Yıllık Tecrübe</span>
+                </div>
+
+                <div>
+                    <strong>4.9</strong>
+                    <span>★★★★★ Müşteri Puanı</span>
+                </div>
+
+                <div>
+                    <strong>30 dk</strong>
+                    <span>Ortalama Teslimat</span>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ================= CATEGORIES ================= -->
+
+<section class="categories">
+
+    <div class="container">
+
+        <div class="section-heading">
+
+            <div>
+                <span class="section-label">MENÜMÜZ</span>
+
+                <h2>
+                    Bugün Ne Yemek İstersin?
+                </h2>
+            </div>
+
+            <a href="#menu" class="view-all">
+                Tüm Menüyü Gör →
+            </a>
+
+        </div>
+
+
+        <div class="category-list">
+
+            <a href="#pide" class="category-card active">
+                <div class="category-icon">🥙</div>
+                <strong>Pideler</strong>
+                <span>12 ürün</span>
+            </a>
+
+            <a href="#lahmacun" class="category-card">
+                <div class="category-icon">🫓</div>
+                <strong>Lahmacun</strong>
+                <span>6 ürün</span>
+            </a>
+
+            <a href="#kebap" class="category-card">
+                <div class="category-icon">🍢</div>
+                <strong>Kebaplar</strong>
+                <span>8 ürün</span>
+            </a>
+
+            <a href="#corba" class="category-card">
+                <div class="category-icon">🥣</div>
+                <strong>Çorbalar</strong>
+                <span>4 ürün</span>
+            </a>
+
+            <a href="#icecek" class="category-card">
+                <div class="category-icon">🥤</div>
+                <strong>İçecekler</strong>
+                <span>10 ürün</span>
+            </a>
+
+            <a href="#tatli" class="category-card">
+                <div class="category-icon">🍮</div>
+                <strong>Tatlılar</strong>
+                <span>5 ürün</span>
+            </a>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ================= PRODUCTS ================= -->
+
+<section class="products-section" id="menu">
+
+    <div class="container">
+
+        <div class="section-heading center">
+
+            <span class="section-label">EN ÇOK TERCİH EDİLENLER</span>
+
+            <h2>
+                Ustanın Önerileri
+            </h2>
+
+            <p>
+                Mutfağımızdan çıkan, müşterilerimizin
+                en sevdiği lezzetler.
+            </p>
+
+        </div>
+
+
+        <div class="product-grid">
+
+            <!-- PRODUCT -->
+
+            <article class="product-card">
+
+                <div class="product-image">
+
+                    <span class="product-badge">
+                        ÇOK SATAN
+                    </span>
+
+                    <div class="food-placeholder">
+                        🫓
+                    </div>
+
+                </div>
+
+                <div class="product-content">
+
+                    <div class="product-rating">
+                        ★★★★★
+                        <span>(124)</span>
+                    </div>
+
+                    <h3>Kıymalı Pide</h3>
+
+                    <p>
+                        Özel kıymalı harç, domates,
+                        biber ve ustamızın özel baharatları.
+                    </p>
+
+                    <div class="product-footer">
+
+                        <strong>
+                            150 <small>₺</small>
+                        </strong>
+
+                        <button class="add-cart">
+                            + Sepete Ekle
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </article>
+
+
+            <!-- PRODUCT -->
+
+            <article class="product-card">
+
+                <div class="product-image">
+
+                    <span class="product-badge new">
+                        FAVORİ
+                    </span>
+
+                    <div class="food-placeholder">
+                        🫓
+                    </div>
+
+                </div>
+
+                <div class="product-content">
+
+                    <div class="product-rating">
+                        ★★★★★
+                        <span>(98)</span>
+                    </div>
+
+                    <h3>Kuşbaşılı Pide</h3>
+
+                    <p>
+                        Özenle seçilmiş kuşbaşı et,
+                        domates, biber ve kaşar.
+                    </p>
+
+                    <div class="product-footer">
+
+                        <strong>
+                            180 <small>₺</small>
+                        </strong>
+
+                        <button class="add-cart">
+                            + Sepete Ekle
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </article>
+
+
+            <!-- PRODUCT -->
+
+            <article class="product-card">
+
+                <div class="product-image">
+
+                    <div class="food-placeholder">
+                        🫓
+                    </div>
+
+                </div>
+
+                <div class="product-content">
+
+                    <div class="product-rating">
+                        ★★★★★
+                        <span>(87)</span>
+                    </div>
+
+                    <h3>Kaşarlı Pide</h3>
+
+                    <p>
+                        Bol kaşar peyniri ve çıtır
+                        taş fırın hamuru.
+                    </p>
+
+                    <div class="product-footer">
+
+                        <strong>
+                            160 <small>₺</small>
+                        </strong>
+
+                        <button class="add-cart">
+                            + Sepete Ekle
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </article>
+
+
+            <!-- PRODUCT -->
+
+            <article class="product-card">
+
+                <div class="product-image">
+
+                    <div class="food-placeholder">
+                        🌯
+                    </div>
+
+                </div>
+
+                <div class="product-content">
+
+                    <div class="product-rating">
+                        ★★★★★
+                        <span>(156)</span>
+                    </div>
+
+                    <h3>Lahmacun</h3>
+
+                    <p>
+                        İncecik hamur, bol malzemeli
+                        özel lahmacun harcı.
+                    </p>
+
+                    <div class="product-footer">
+
+                        <strong>
+                            130 <small>₺</small>
+                        </strong>
+
+                        <button class="add-cart">
+                            + Sepete Ekle
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </article>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ================= CAMPAIGN ================= -->
+
+<section class="campaign" id="kampanyalar">
+
+    <div class="container campaign-container">
+
+        <div class="campaign-content">
+
+            <span>
+                BUGÜNE ÖZEL
+            </span>
+
+            <h2>
+                2 Pide Al,<br>
+                <strong>1 Ayran Bizden!</strong>
+            </h2>
+
+            <p>
+                Online siparişlerde geçerlidir.
+                Kampanya stoklarla sınırlıdır.
+            </p>
+
+            <a href="/siparis" class="btn btn-white">
+                Hemen Sipariş Ver →
+            </a>
+
+        </div>
+
+        <div class="campaign-food">
+            🫓
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ================= WHY US ================= -->
+
+<section class="why-us" id="hakkimizda">
+
+    <div class="container">
+
+        <div class="section-heading center">
+
+            <span class="section-label">
+                NEDEN PAYİDAR PİDE?
+            </span>
+
+            <h2>
+                Lezzetin Arkasında Bir Hikâye Var
+            </h2>
+
+        </div>
+
+
+        <div class="why-grid">
+
+            <div class="why-card">
+
+                <div class="why-icon">
+                    🔥
+                </div>
+
+                <h3>
+                    Taş Fırın
+                </h3>
+
+                <p>
+                    Geleneksel taş fırında,
+                    yüksek sıcaklıkta pişiriyoruz.
+                </p>
+
+            </div>
+
+
+            <div class="why-card">
+
+                <div class="why-icon">
+                    🥩
+                </div>
+
+                <h3>
+                    Kaliteli Malzeme
+                </h3>
+
+                <p>
+                    Her gün taze ve özenle seçilmiş
+                    malzemeler kullanıyoruz.
+                </p>
+
+            </div>
+
+
+            <div class="why-card">
+
+                <div class="why-icon">
+                    👨‍🍳
+                </div>
+
+                <h3>
+                    Usta Eller
+                </h3>
+
+                <p>
+                    Yılların deneyimiyle hazırlanan
+                    geleneksel tarifler.
+                </p>
+
+            </div>
+
+
+            <div class="why-card">
+
+                <div class="why-icon">
+                    🛵
+                </div>
+
+                <h3>
+                    Hızlı Teslimat
+                </h3>
+
+                <p>
+                    Siparişinizi sıcak ve hızlı
+                    şekilde adresinize ulaştırıyoruz.
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ================= CTA ================= -->
+
+<section class="order-cta">
+
+    <div class="container">
+
+        <div class="cta-box">
+
+            <div>
+
+                <span>
+                    AÇ MISIN?
+                </span>
+
+                <h2>
+                    En sevdiğin lezzet<br>
+                    birkaç tık uzağında.
+                </h2>
+
+            </div>
+
+            <a href="/siparis" class="btn btn-primary">
+                Online Sipariş Ver →
+            </a>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ================= FOOTER ================= -->
+
+<footer id="iletisim">
+
+    <div class="container footer-grid">
+
+        <div class="footer-brand">
+
+            <div class="logo">
+                <div class="logo-icon">U</div>
+
+                <div class="logo-text">
+                    <strong>USTA PİDE</strong>
+                    <span>Gelenekten Geleceğe</span>
+                </div>
+            </div>
+
+            <p>
+                Geleneksel lezzetleri modern
+                hizmet anlayışıyla sofranıza getiriyoruz.
+            </p>
+
+        </div>
+
+
+        <div>
+
+            <h4>Hızlı Menü</h4>
+
+            <a href="#anasayfa">Ana Sayfa</a>
+            <a href="#menu">Menü</a>
+            <a href="#kampanyalar">Kampanyalar</a>
+            <a href="#hakkimizda">Hakkımızda</a>
+
+        </div>
+
+
+        <div>
+
+            <h4>İletişim</h4>
+
+            <p>📍 Isparta Çünür Mahallesi, Türkiye</p>
+            <p>☎️ 0530 049 04 </p>
+            <p>✉️ info@ustapide.com</p>
+
+        </div>
+
+
+        <div>
+
+            <h4>Çalışma Saatleri</h4>
+
+            <p>
+                Pazartesi - Pazar
+            </p>
+
+            <strong>
+                11:00 - 00:00
+            </strong>
+
+            <div class="open-status">
+                ● Şu anda açığız
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="footer-bottom">
+
+        <div class="container">
+
+            <span>
+                © 2026 Usta Pide. Tüm hakları saklıdır.
+            </span>
+
+            <span>
+                Güvenli Online Sipariş
+            </span>
+
+        </div>
+
+    </div>
+
+</footer>
+
+
+</body>
+</html>
