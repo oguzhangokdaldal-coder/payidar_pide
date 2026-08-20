@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Biz Kimiz? | Payidar Pide{% endblock %}
+{% block content %}
+<section class="story-section" id="story">
+  <div class="story-image">
+    <img src="https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=900&q=85" alt="Pide ustası hamur hazırlıyor" />
+    <span class="story-year">25<br><small>YILDIR</small></span>
+  </div>
+  <div class="story-copy">
+    <p class="eyebrow">Payidar'ın hikâyesi</p>
+    <h2>Bir fırının<br><em>etrafında büyüdük.</em></h2>
+    <p>Payidar, iyi pidenin aceleye gelmeyeceğine inanan bir aile işletmesi. İlk günkü taş fırınımız, aynı özenimiz ve her akşam kurulan uzun sofralarımızla buradayız.</p>
+    <a class="text-link" href="{{ url_for('contact') }}">Bize ulaşın <span>↗</span></a>
+  </div>
+</section>
+{% endblock %}
