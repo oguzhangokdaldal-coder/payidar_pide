@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Menü | Payidar Pide{% endblock %}
+{% block content %}
+<section class="menu-section" id="menu">
+  <div class="section-heading">
+    <div><p class="eyebrow">Seçtiklerimiz</p><h2>Menüden bir dilim<br><em>mutluluk.</em></h2></div>
+    <p class="section-intro">İyi malzeme, doğru ateş, sabırla hazırlanan tarifler. Favorini bul, gerisini bize bırak.</p>
+  </div>
+  <div class="category-tabs" role="tablist">
+    <button class="active" data-filter="all">Hepsi</button>
+    <button data-filter="pide">Pideler</button>
+    <button data-filter="kebap">Kebaplar</button>
+    <button data-filter="yan">Yanına iyi gider</button>
+  </div>
+  <div class="product-grid" id="productGrid">
+    {% for item in products %}
+    <article class="product-card" data-category="{{ item.category }}">
+      <div class="product-image">
+        {% if item.image %}
+        <img src="{{ url_for('static', filename=item.image) }}" alt="{{ item.name }}" loading="lazy">
+        {% else %}
+        <div class="product-noimage" aria-hidden="true">🍽️</div>
+        {% endif %}
+        {% if item.tag %}<span class="product-tag">{{ item.tag }}</span>{% endif %}
+      </div>
+      <div class="product-info">
+        <h3>{{ item.name }}</h3>
+        <p>{{ item.description }}</p>
+        <div class="product-bottom">
+          <span class="product-price">{{ item.price }}₺</span>
+          <button class="add-button" data-id="{{ item.id }}" data-name="{{ item.name }}" data-price="{{ item.price }}" data-image="{{ item.image and url_for('static', filename=item.image) or '' }}" aria-label="{{ item.name }} ürününü sepete ekle">+</button>
+        </div>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

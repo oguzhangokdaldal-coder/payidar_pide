@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Kampanyalar | Payidar Pide{% endblock %}
+{% block content %}
+<section class="menu-section" id="campaigns">
+  <div class="section-heading">
+    <div><p class="eyebrow">Fırından fırsatlar</p><h2>Bugünün<br><em>kampanyaları.</em></h2></div>
+    <p class="section-intro">Sofranı kalabalıklaştırmak isteyenler için özel fiyatlar. Kampanyalar her hafta yenilenir.</p>
+  </div>
+  <div class="campaign-grid">
+    {% for c in campaigns %}
+    <article class="campaign-card">
+      <span class="strip-icon">✦</span>
+      <div class="campaign-card-body">
+        <small>{{ c.label }}</small>
+        <strong>{{ c.title }}</strong>
+        <p>{{ c.description }}</p>
+      </div>
+      <a class="text-link" href="{{ url_for('menu') }}">Menüden seç <span>→</span></a>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

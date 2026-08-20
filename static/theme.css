@@ -1,0 +1,13 @@
+:root {
+  --ink: #102b46;
+  --muted: #536b7e;
+  --cream: #e4edf3;
+  --paper: #f8fbfd;
+  --tomato: #0c527d;
+  --orange: #79b4d1;
+  --line: #bfd0dc;
+}
+
+.topline { color: #eaf4fa; }
+.story-section { background: #cddce6; }
+.floating-tag { box-shadow: 0 8px 30px #102b461c; }
