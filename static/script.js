@@ -19,6 +19,19 @@ function addToCart(id, data) {
   setTimeout(() => toast.classList.remove('show'), 1800);
 }
 
+function changeQuantity(id, delta) {
+  const line = cart.find(item => item.id === id);
+  if (!line) return;
+  line.quantity += delta;
+  if (line.quantity <= 0) cart = cart.filter(item => item.id !== id);
+  updateCart();
+}
+
+function removeFromCart(id) {
+  cart = cart.filter(item => item.id !== id);
+  updateCart();
+}
+
 function updateCart() {
   const count = cart.reduce((total, item) => total + item.quantity, 0);
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -31,12 +44,36 @@ function updateCart() {
   const container = document.querySelector('#cartItems');
   if (container) {
     container.innerHTML = cart.length
-      ? cart.map(item => `<div class="cart-line"><img src="${item.image}" alt=""><div><h4>${item.name}</h4><small>${item.quantity} adet</small></div><strong>${formatPrice(item.price * item.quantity)}</strong></div>`).join('')
+      ? cart.map(item => `
+        <div class="cart-line">
+          ${item.image ? `<img src="${item.image}" alt="">` : '<span class="cart-line-noimage">🍽️</span>'}
+          <div class="cart-line-info">
+            <h4>${item.name}</h4>
+            <div class="qty-control">
+              <button type="button" class="qty-btn" data-action="decrease" data-id="${item.id}" aria-label="Azalt">−</button>
+              <span>${item.quantity}</span>
+              <button type="button" class="qty-btn" data-action="increase" data-id="${item.id}" aria-label="Artır">+</button>
+            </div>
+          </div>
+          <div class="cart-line-right">
+            <strong>${formatPrice(item.price * item.quantity)}</strong>
+            <button type="button" class="cart-remove" data-action="remove" data-id="${item.id}" aria-label="${item.name} ürününü sepetten çıkar">Kaldır</button>
+          </div>
+        </div>`).join('')
       : `<div class="empty-cart"><span>⌁</span><h3>Sepetin henüz boş</h3><p>Fırından çıkan bir şeyler eklemeye ne dersin?</p><a href="/menu" id="startShopping">Menüye git →</a></div>`;
     document.querySelector('#startShopping')?.addEventListener('click', closeCart);
   }
   saveCart();
 }
+
+document.querySelector('#cartItems')?.addEventListener('click', (event) => {
+  const button = event.target.closest('.qty-btn, .cart-remove');
+  if (!button) return;
+  const id = Number(button.dataset.id);
+  if (button.dataset.action === 'increase') changeQuantity(id, 1);
+  else if (button.dataset.action === 'decrease') changeQuantity(id, -1);
+  else if (button.dataset.action === 'remove') removeFromCart(id);
+});
 
 function openCart() {
   document.querySelector('#cartDrawer')?.classList.add('open');
@@ -67,8 +104,28 @@ if (categoryTabs.length) {
   });
 }
 
+const menuToggle = document.querySelector('#menuToggle');
+const siteNav = document.querySelector('#siteNav');
+if (menuToggle && siteNav) {
+  menuToggle.addEventListener('click', () => {
+    const isOpen = siteNav.classList.toggle('open');
+    menuToggle.classList.toggle('open', isOpen);
+    menuToggle.setAttribute('aria-expanded', String(isOpen));
+  });
+  siteNav.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => {
+      siteNav.classList.remove('open');
+      menuToggle.classList.remove('open');
+      menuToggle.setAttribute('aria-expanded', 'false');
+    });
+  });
+}
+
 document.querySelector('#openCart')?.addEventListener('click', openCart);
 document.querySelector('#closeCart')?.addEventListener('click', closeCart);
 document.querySelector('#cartOverlay')?.addEventListener('click', closeCart);
+document.querySelector('.checkout-button')?.addEventListener('click', () => {
+  if (cart.length) window.location.href = '/siparis';
+});
 
 updateCart();

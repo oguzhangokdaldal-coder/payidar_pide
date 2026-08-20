@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Yönetim Girişi | Payidar Pide</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}" />
+</head>
+<body class="admin-body admin-login-body">
+  <form class="admin-login-card" method="post">
+    <h1>Payidar <span>Yönetim</span></h1>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}<p class="admin-flash">{{ messages[0] }}</p>{% endif %}
+    {% endwith %}
+    <label>Şifre
+      <input type="password" name="password" required autofocus>
+    </label>
+    <button type="submit">Giriş yap</button>
+  </form>
+</body>
+</html>

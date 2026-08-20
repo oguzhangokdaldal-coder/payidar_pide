@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_macros.html" import product_card %}
 {% block content %}
 <section class="hero">
   <div class="hero-copy">
@@ -18,6 +19,18 @@
       <div class="hero-price"><small>Çıtır kenar,</small><strong>gerçek<br>lezzet.</strong></div>
     </div>
     <div class="floating-tag">Fırından<br><strong>yeni çıktı</strong> <span>↗</span></div>
+  </div>
+</section>
+
+<section class="menu-section home-menu-section" id="home-menu">
+  <div class="section-heading">
+    <div><p class="eyebrow">Öne çıkanlar</p><h2>Bugünün<br><em>favorileri.</em></h2></div>
+    <a class="text-link" href="{{ url_for('menu') }}">Tüm menüyü gör <span>→</span></a>
+  </div>
+  <div class="product-grid">
+    {% for item in featured_products %}
+    {{ product_card(item) }}
+    {% endfor %}
   </div>
 </section>
 
