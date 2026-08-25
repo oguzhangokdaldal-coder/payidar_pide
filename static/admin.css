@@ -42,7 +42,13 @@ body.admin-body { margin: 0; background: var(--cream); color: var(--ink); font-f
 .admin-badge.pay-pending { background: #fbe6c8; color: #93590c; }
 .admin-badge.pay-failed { background: #f8dede; color: #92251a; }
 .admin-badge.pay-kapida_odeme { background: #e3e8f5; color: #2c3f8f; }
+.admin-badge.status-onay_bekliyor { background: #fbe6c8; color: #93590c; }
 .admin-order-meta { color: var(--muted); font-size: 13px; margin: 0 0 6px; }
 .admin-order-note { font-size: 13px; margin: 0 0 8px; font-style: italic; color: var(--muted); }
 .admin-order-items { margin: 0 0 10px; padding-left: 18px; font-size: 14px; }
-.admin-order-total { text-align: right; font-size: 15px; }
+.admin-order-bottom { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+.admin-order-total { font-size: 15px; }
+.admin-confirm-form { display: flex; align-items: center; gap: 12px; }
+.admin-confirm-code { font-size: 13px; font-weight: 700; letter-spacing: .05em; background: var(--cream); padding: 5px 9px; }
+.admin-confirm-form button { border: 0; background: var(--tomato); color: #fff; font-weight: 700; font-size: 12px; padding: 9px 14px; cursor: pointer; }
+.admin-confirm-form button:hover { background: #963522; }

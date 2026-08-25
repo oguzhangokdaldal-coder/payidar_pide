@@ -4,7 +4,15 @@
 <section class="result-section">
   <span class="result-icon success">✓</span>
   <h2>Siparişin alındı!</h2>
-  <p>Sipariş numaran <strong>#{{ order.id }}</strong>. {% if order.payment_method == 'online' %}Ödemen alındıktan sonra fırına veriyoruz.{% else %}Kapıda ödeme ile hazırlanıyor.{% endif %}</p>
+  <p>Sipariş numaran <strong>#{{ order.id }}</strong>.
+    {% if order.payment_method == 'online' %}
+      Ödemen alındıktan sonra fırına veriyoruz.
+    {% elif order.status == 'onay_bekliyor' %}
+      Siparişini onaylamak için birazdan <strong>{{ order.phone }}</strong> numaranı arayacağız ya da WhatsApp'tan yazacağız — onaylandıktan sonra fırına veriyoruz.
+    {% else %}
+      Kapıda ödeme ile hazırlanıyor.
+    {% endif %}
+  </p>
   <div class="result-summary">
     <div><span>Ad Soyad</span><strong>{{ order.customer_name }}</strong></div>
     <div><span>Adres</span><strong>{{ order.address }}</strong></div>

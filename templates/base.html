@@ -19,7 +19,7 @@
     </div>
   </div>
   <header class="site-header">
-    <a class="brand" href="{{ url_for('home') }}" aria-label="Payidar Pide ana sayfa"><img class="brand-logo" src="{{ url_for('static', filename='img/logo.png') }}" alt="Payidar Pide Salonu logosu"><span>payidar<small>PİDE SALONU</small></span></a>
+    <a class="brand" href="{{ url_for('home') }}" aria-label="Payidar Pide ana sayfa"><img class="brand-logo" src="{{ url_for('static', filename='img/logo.png') }}" alt="Payidar Pide Salonu logosu"><span><small></small></span></a>
     <nav class="desktop-nav" id="siteNav" aria-label="Ana navigasyon">
       <a href="{{ url_for('menu') }}"{% if active == 'menu' %} class="active"{% endif %}>Menü</a>
       <a href="{{ url_for('campaigns') }}"{% if active == 'campaigns' %} class="active"{% endif %}>Kampanyalar</a>
@@ -36,7 +36,7 @@
     {% block content %}{% endblock %}
   </main>
 
-  <footer><a class="brand" href="{{ url_for('home') }}" aria-label="Payidar Pide ana sayfa"><img class="brand-logo" src="{{ url_for('static', filename='img/logo.png') }}" alt="Payidar Pide Salonu logosu"><span>payidar<small>PİDE SALONU</small></span></a><span>© 2024 Payidar Pide</span><span>Afiyetle, paylaşarak.</span></footer>
+  <footer><a class="brand" href="{{ url_for('home') }}" aria-label="Payidar Pide ana sayfa"><img class="brand-logo" src="{{ url_for('static', filename='img/logo.png') }}" alt="Payidar Pide Salonu logosu"><span>payidar<small>PİDE SALONU</small></span></a><span>© 2026 Payidar Pide</span><span>Afiyetle, paylaşarak.</span></footer>
 
   <div class="cart-overlay" id="cartOverlay"></div>
   <aside class="cart-drawer" id="cartDrawer" aria-label="Alışveriş sepeti">

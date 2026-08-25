@@ -1,11 +1,13 @@
 import hmac
 import os
 import secrets
+from datetime import datetime, timedelta
 
 from dotenv import load_dotenv
 from flask import Flask, flash, jsonify, redirect, render_template, request, session, url_for
 
 import paytr
+import webhooks
 from models import Order, OrderItem, db
 
 load_dotenv()
@@ -24,21 +26,37 @@ app.config["PAYTR_MERCHANT_SALT"] = os.environ.get("PAYTR_MERCHANT_SALT", "")
 app.config["PAYTR_TEST_MODE"] = os.environ.get("PAYTR_TEST_MODE", "1") == "1"
 app.config["ADMIN_PASSWORD"] = os.environ.get("ADMIN_PASSWORD", "")
 
+app.config["WHATSAPP_WEBHOOK_URL"] = os.environ.get("WHATSAPP_WEBHOOK_URL", "")
+app.config["WHATSAPP_WEBHOOK_SECRET"] = os.environ.get("WHATSAPP_WEBHOOK_SECRET", "")
+
+ORDER_RATE_LIMIT_WINDOW_MIN = 15
+
 db.init_app(app)
 with app.app_context():
     db.create_all()
 
 PRODUCTS = [
-    {"id": 1, "category": "pide", "name": "Payidar Karışık", "description": "Kuşbaşı, kaşar, sucuk ve közlenmiş biber", "price": 290, "tag": "Favori", "image": "img/karısik_pizza.jpg"},
-    {"id": 2, "category": "pide", "name": "Kuşbaşı Kaşarlı Pide", "description": "Zırh kıyması, bol kaşar ve tereyağı", "price": 260, "tag": "Yeni", "image": "img/kusbasi_kasar.jpg"},
-    {"id": 3, "category": "pide", "name": "Kıymalı Pide", "description": "İnce kıyma, domates, biber ve maydanoz", "price": 230, "tag": "", "image": "img/kiymali.jpg"},
-    {"id": 4, "category": "pide", "name": "Kaşarlı Pide", "description": "Uzayan kaşar, tereyağı ve çıtır hamur", "price": 210, "tag": "", "image": "img/kasarlipide.jpg"},
+    {"id": 1, "category": "pide", "name": "Özel Karışık Pide", "description": "Kuşbaşı, kaşar, sucuk ve közlenmiş biber", "price": 250, "tag": "Favori", "image": "img/karısik_pizza.jpg"},
+    {"id": 2, "category": "pide", "name": "Kuşbaşılı Kaşarlı Pide", "description": "Zırh kıyması, bol kaşar ve tereyağı", "price": 200, "tag": "Yeni", "image": "img/kusbasi_kasar.jpg"},
+    {"id": 3, "category": "pide", "name": "Kıymalı Pide", "description": "İnce kıyma, domates, biber ve maydanoz", "price": 150, "tag": "", "image": "img/kiymali.jpg"},
+    {"id": 4, "category": "pide", "name": "Kaşarlı Pide", "description": "Uzayan kaşar, tereyağı ve çıtır hamur", "price": 160, "tag": "", "image": "img/kasarlipide.jpg"},
     {"id": 5, "category": "pide", "name": "Sucuklu Kaşarlı Pide", "description": "Baharatlı sucuk ve bol kaşar", "price": 250, "tag": "", "image": "img/sucuklu_kasar.jpg"},
-    {"id": 6, "category": "pide", "name": "Lahmacun", "description": "İnce açılmış hamur, bol malzeme, taş fırında", "price": 90, "tag": "", "image": "img/lahmacun.jpg"},
-    {"id": 7, "category": "kebap", "name": "Adana veya Urfa Kebap", "description": "Zırhta çekilmiş et, köz sebzeler ve lavaş", "price": 310, "tag": "", "image": "img/adana_veya_urfa.jpg"},
-    {"id": 8, "category": "yan", "name": "Fırın Sütlaç", "description": "Geleneksel tarif, çıtır fındık dokunuşuyla", "price": 95, "tag": "Tatlı", "image": ""},
-    {"id": 9, "category": "yan", "name": "Közlenmiş Biber", "description": "Taş fırında közlenmiş, zeytinyağlı", "price": 80, "tag": "", "image": ""},
-    {"id": 10, "category": "yan", "name": "Yayık Ayran", "description": "Günlük yoğurttan, buz gibi", "price": 45, "tag": "", "image": ""},
+    {"id": 6, "category": "pide", "name": "Lahmacun", "description": "İnce açılmış hamur, bol malzeme, taş fırında", "price": 140, "tag": "", "image": "img/lahmacun.jpg"},
+    {"id": 7, "category": "pide", "name": "Peynirli Pide", "description": "Bol beyaz peynir ve maydanoz", "price": 150, "tag": "", "image": ""},
+    {"id": 8, "category": "pide", "name": "Kıymalı Kaşarlı Pide", "description": "İnce kıyma ve bol kaşar bir arada", "price": 170, "tag": "", "image": ""},
+    {"id": 9, "category": "pide", "name": "Kuşbaşılı Pide", "description": "Zırh kuşbaşı, domates ve biber", "price": 180, "tag": "", "image": ""},
+    {"id": 10, "category": "pide", "name": "Sade Kıymalı Pide", "description": "Bol kıyma, sade ve doyurucu", "price": 250, "tag": "", "image": ""},
+
+    {"id": 11, "category": "izgara", "name": "Şiş Köfte", "description": "Izgara ateşinde közlenmiş şiş köfte", "price": 300, "tag": "", "image": ""},
+    {"id": 12, "category": "izgara", "name": "Adana Kebap", "description": "Zırhta çekilmiş acılı et, köz sebzeler ve lavaş", "price": 300, "tag": "", "image": "img/adana_veya_urfa.jpg"},
+    {"id": 13, "category": "izgara", "name": "Izgara Köfte", "description": "El yapımı ızgara köfte", "price": 300, "tag": "", "image": ""},
+    {"id": 14, "category": "izgara", "name": "Tavuk Şiş", "description": "Marine edilmiş tavuk şiş", "price": 300, "tag": "", "image": ""},
+
+    {"id": 15, "category": "durum", "name": "Adana Dürüm", "description": "Adana kebap, lavaş içinde sarılır", "price": 300, "tag": "", "image": ""},
+    {"id": 16, "category": "durum", "name": "Tavuk Dürüm", "description": "Marine tavuk şiş, lavaş içinde sarılır", "price": 300, "tag": "", "image": ""},
+    {"id": 17, "category": "durum", "name": "Şiş Köfte Dürüm", "description": "Şiş köfte, lavaş içinde sarılır", "price": 300, "tag": "", "image": ""},
+
+    {"id": 18, "category": "yan", "name": "Yayık Ayran", "description": "Günlük yoğurttan, buz gibi", "price": 45, "tag": "", "image": ""},
 ]
 PRODUCTS_BY_ID = {item["id"]: item for item in PRODUCTS}
 
@@ -51,8 +69,8 @@ CAMPAIGNS = [
 
 TOPLINE_MESSAGES = [
     "🔥 Bugün fırından çıkanlar",
-    "🕐 12:00 — 23:30 açığız",
-    "📍 Merkez, İstanbul",
+    "🕐 10:00 — 22:00 açığız",
+    "📍 Çünür, Isparta",
 ] + [f"🎉 {c['title']}" for c in CAMPAIGNS]
 
 
@@ -137,6 +155,17 @@ def create_order():
     if payment_method == "online" and not app.config["PAYTR_MERCHANT_ID"]:
         return jsonify(error="Online ödeme şu anda kullanılamıyor, kapıda ödemeyi seçin."), 503
 
+    if payment_method == "kapida":
+        window_start = datetime.utcnow() - timedelta(minutes=ORDER_RATE_LIMIT_WINDOW_MIN)
+        recent_order = Order.query.filter(
+            Order.phone == phone,
+            Order.payment_method == "kapida",
+            Order.status == "onay_bekliyor",
+            Order.created_at >= window_start,
+        ).first()
+        if recent_order:
+            return jsonify(error="Onay bekleyen bir siparişiniz zaten var, lütfen onaylanmasını bekleyin."), 429
+
     order = Order(
         customer_name=customer_name,
         phone=phone,
@@ -144,6 +173,7 @@ def create_order():
         note=note,
         payment_method=payment_method,
         payment_status="pending" if payment_method == "online" else "kapida_odeme",
+        status="onay_bekliyor" if payment_method == "kapida" else "alindi",
         total_price=total_kurus,
         items=order_items,
     )
@@ -151,6 +181,10 @@ def create_order():
     db.session.commit()
 
     if payment_method == "kapida":
+        code = f"{secrets.randbelow(900000) + 100000}"
+        order.confirmation_code = code
+        db.session.commit()
+        webhooks.send_order_confirmation_request(app.config, order, code)
         return jsonify(redirect=url_for("order_success", order_id=order.id))
 
     merchant_oid = f"PYD{order.id:06d}{secrets.token_hex(3)}"
@@ -216,6 +250,28 @@ def order_success(order_id):
     return render_template("order_success.html", order=order)
 
 
+@app.route("/webhooks/siparis-onayla", methods=["POST"])
+def confirm_order_webhook():
+    """Dis onay botu (ör. WhatsApp) musteriden dogru kodu aldiginda bunu cagirir."""
+    expected_secret = app.config["WHATSAPP_WEBHOOK_SECRET"]
+    if expected_secret and not hmac.compare_digest(request.headers.get("X-Webhook-Secret", ""), expected_secret):
+        return jsonify(error="Yetkisiz."), 403
+
+    data = request.get_json(silent=True) or {}
+    order = Order.query.get(data.get("order_id"))
+    code = str(data.get("code") or "")
+
+    if not order or order.status != "onay_bekliyor":
+        return jsonify(error="Onay bekleyen böyle bir sipariş yok."), 404
+    if not order.confirmation_code or not hmac.compare_digest(order.confirmation_code, code):
+        return jsonify(error="Kod hatalı."), 400
+
+    order.status = "alindi"
+    order.confirmed_at = datetime.utcnow()
+    db.session.commit()
+    return jsonify(ok=True)
+
+
 # ---------------------------------------------------------------------------
 # Basit yönetim paneli (sipariş takibi)
 # ---------------------------------------------------------------------------
@@ -244,6 +300,18 @@ def admin_orders():
         return redirect(url_for("admin_login"))
     orders = Order.query.order_by(Order.created_at.desc()).all()
     return render_template("admin_orders.html", orders=orders)
+
+
+@app.route("/admin/siparisler/<int:order_id>/onayla", methods=["POST"])
+def admin_confirm_order(order_id):
+    if not session.get("is_admin"):
+        return redirect(url_for("admin_login"))
+    order = Order.query.get_or_404(order_id)
+    if order.status == "onay_bekliyor":
+        order.status = "alindi"
+        order.confirmed_at = datetime.utcnow()
+        db.session.commit()
+    return redirect(url_for("admin_orders"))
 
 
 if __name__ == "__main__":

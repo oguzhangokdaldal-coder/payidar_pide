@@ -36,9 +36,9 @@ button { font: inherit; cursor: pointer; }
 
 /* Header */
 .site-header { position: sticky; top: 0; z-index: 8; height: 86px; padding: 0 6vw; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); background: var(--cream); }
-.brand { display: flex; align-items: center; gap: 10px; color: var(--ink); font-weight: 800; font-size: 22px; letter-spacing: -.06em; }
+.brand { display: flex; align-items: center; gap: 10px; color: var(--ink); font-weight: 800; font-size: 22px; letter-spacing: -.06em; flex-shrink: 0; }
 .brand small { display: block; font-size: 9px; letter-spacing: .18em; color: var(--tomato); margin-top: 2px; }
-.brand-logo { height: 72px; width: auto; display: block; }
+.brand-logo { height: 72px; width: auto; max-width: none; display: block; flex-shrink: 0; }
 .desktop-nav { display: flex; gap: 34px; margin-left: 10%; font-size: 18px; font-weight: 600; }
 .desktop-nav a { transition: color .2s; padding: 6px 0; border-bottom: 2px solid transparent; }
 .desktop-nav a:hover { color: var(--tomato); }
@@ -184,7 +184,7 @@ em { color: var(--tomato); font-style: normal; }
 footer { padding: 30px 6vw; background: var(--ink); color: #aaa197; display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
 footer .brand { color: #fff; }
 footer .brand small { color: var(--orange); }
-footer .brand-logo { height: 56px; }
+footer .brand-logo { height: 56px; background: #fff; padding: 5px 9px; border-radius: 8px; }
 
 /* Cart drawer */
 .cart-overlay { position: fixed; inset: 0; background: #241b1590; z-index: 9; opacity: 0; visibility: hidden; transition: .3s; }

@@ -18,7 +18,10 @@ class Order(db.Model):
 
     payment_method = db.Column(db.String(20), nullable=False)  # "online" | "kapida"
     payment_status = db.Column(db.String(20), default="pending")  # pending | paid | failed
-    status = db.Column(db.String(20), default="alindi")  # alindi | hazirlaniyor | yolda | teslim_edildi
+    status = db.Column(db.String(20), default="alindi")  # onay_bekliyor | alindi | hazirlaniyor | yolda | teslim_edildi
+
+    confirmation_code = db.Column(db.String(10), nullable=True)
+    confirmed_at = db.Column(db.DateTime, nullable=True)
 
     total_price = db.Column(db.Integer, nullable=False)  # kuruş cinsinden (PayTR ile uyumlu)
     merchant_oid = db.Column(db.String(64), unique=True, nullable=True)

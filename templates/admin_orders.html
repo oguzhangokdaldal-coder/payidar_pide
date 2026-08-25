@@ -31,7 +31,15 @@
           <li>{{ item.quantity }}× {{ item.product_name }} — {{ '%.2f'|format(item.line_total_tl) }}₺</li>
           {% endfor %}
         </ul>
-        <div class="admin-order-total">Toplam: <strong>{{ '%.2f'|format(order.total_price_tl) }}₺</strong></div>
+        <div class="admin-order-bottom">
+          <div class="admin-order-total">Toplam: <strong>{{ '%.2f'|format(order.total_price_tl) }}₺</strong></div>
+          {% if order.status == 'onay_bekliyor' %}
+          <form method="post" action="{{ url_for('admin_confirm_order', order_id=order.id) }}" class="admin-confirm-form">
+            <span class="admin-confirm-code">Kod: {{ order.confirmation_code }}</span>
+            <button type="submit">Telefonla onayladım, sipariş kabul edilsin</button>
+          </form>
+          {% endif %}
+        </div>
       </article>
       {% endfor %}
     </div>
