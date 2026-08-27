@@ -56,7 +56,13 @@ PRODUCTS = [
     {"id": 16, "category": "durum", "name": "Tavuk Dürüm", "description": "Marine tavuk şiş, lavaş içinde sarılır", "price": 300, "tag": "", "image": ""},
     {"id": 17, "category": "durum", "name": "Şiş Köfte Dürüm", "description": "Şiş köfte, lavaş içinde sarılır", "price": 300, "tag": "", "image": ""},
 
-    {"id": 18, "category": "yan", "name": "Yayık Ayran", "description": "Günlük yoğurttan, buz gibi", "price": 45, "tag": "", "image": ""},
+    {"id": 18, "category": "icecek", "name": "Yayık Ayran", "description": "Günlük yoğurttan, buz gibi", "price": 45, "tag": "", "image": ""},
+    {"id": 19, "category": "icecek", "name": "Kutu Kola", "description": "330 ml, buz gibi", "price": 40, "tag": "", "image": ""},
+    {"id": 20, "category": "icecek", "name": "Fanta", "description": "330 ml, buz gibi", "price": 40, "tag": "", "image": ""},
+    {"id": 21, "category": "icecek", "name": "Sprite", "description": "330 ml, buz gibi", "price": 40, "tag": "", "image": ""},
+    {"id": 22, "category": "icecek", "name": "Soda", "description": "200 ml, sade", "price": 25, "tag": "", "image": ""},
+    {"id": 23, "category": "icecek", "name": "Şalgam Suyu", "description": "Acılı, geleneksel usul", "price": 35, "tag": "", "image": ""},
+    {"id": 24, "category": "icecek", "name": "Çay", "description": "Demlik çaydanlıktan, ince belli bardakta", "price": 20, "tag": "", "image": ""},
 ]
 PRODUCTS_BY_ID = {item["id"]: item for item in PRODUCTS}
 
