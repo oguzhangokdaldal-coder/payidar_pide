@@ -12,23 +12,31 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}" />
 </head>
 <body>
-  <div class="topline"><span>BUGÜN FIRINDAN ÇIKANLAR</span><span>12:00 — 23:30 AÇIĞIZ</span><span class="topline-location">📍 Merkez, İstanbul</span></div>
+  <div class="topline">
+    <div class="topline-track">
+      {% for msg in topline_messages %}<span class="topline-item">{{ msg }}</span>{% endfor %}
+      {% for msg in topline_messages %}<span class="topline-item" aria-hidden="true">{{ msg }}</span>{% endfor %}
+    </div>
+  </div>
   <header class="site-header">
-    <a class="brand" href="{{ url_for('home') }}" aria-label="Payidar Pide ana sayfa"><span class="brand-mark">P</span><span>payidar<small>PİDE SALONU</small></span></a>
-    <nav class="desktop-nav" aria-label="Ana navigasyon">
+    <a class="brand" href="{{ url_for('home') }}" aria-label="Payidar Pide ana sayfa"><img class="brand-logo" src="{{ url_for('static', filename='img/logo.png') }}" alt="Payidar Pide Salonu logosu"><span>payidar<small>PİDE SALONU</small></span></a>
+    <nav class="desktop-nav" id="siteNav" aria-label="Ana navigasyon">
       <a href="{{ url_for('menu') }}"{% if active == 'menu' %} class="active"{% endif %}>Menü</a>
       <a href="{{ url_for('campaigns') }}"{% if active == 'campaigns' %} class="active"{% endif %}>Kampanyalar</a>
       <a href="{{ url_for('about') }}"{% if active == 'about' %} class="active"{% endif %}>Biz Kimiz?</a>
       <a href="{{ url_for('contact') }}"{% if active == 'contact' %} class="active"{% endif %}>İletişim</a>
     </nav>
-    <button class="cart-button" id="openCart" type="button" aria-label="Sepeti aç"><span class="cart-icon">🛒</span><span>Sepetim</span><b id="cartCount">0</b></button>
+    <div class="header-actions">
+      <button class="cart-button" id="openCart" type="button" aria-label="Sepeti aç"><span class="cart-icon">🛒</span><span>Sepetim</span><b id="cartCount">0</b></button>
+      <button class="menu-toggle" id="menuToggle" type="button" aria-label="Menüyü aç" aria-expanded="false" aria-controls="siteNav"><span></span><span></span><span></span></button>
+    </div>
   </header>
 
   <main id="top">
     {% block content %}{% endblock %}
   </main>
 
-  <footer><a class="brand" href="{{ url_for('home') }}"><span class="brand-mark">P</span><span>payidar<small>PİDE SALONU</small></span></a><span>© 2024 Payidar Pide</span><span>Afiyetle, paylaşarak.</span></footer>
+  <footer><a class="brand" href="{{ url_for('home') }}" aria-label="Payidar Pide ana sayfa"><img class="brand-logo" src="{{ url_for('static', filename='img/logo.png') }}" alt="Payidar Pide Salonu logosu"><span>payidar<small>PİDE SALONU</small></span></a><span>© 2024 Payidar Pide</span><span>Afiyetle, paylaşarak.</span></footer>
 
   <div class="cart-overlay" id="cartOverlay"></div>
   <aside class="cart-drawer" id="cartDrawer" aria-label="Alışveriş sepeti">

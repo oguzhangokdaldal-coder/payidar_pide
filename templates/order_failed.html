@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Ödeme Başarısız | Payidar Pide{% endblock %}
+{% block content %}
+<section class="result-section">
+  <span class="result-icon fail">✕</span>
+  <h2>Ödeme tamamlanamadı</h2>
+  <p>Sipariş #{{ order.id }} için ödeme alınamadı. Kartını kontrol edip tekrar deneyebilir ya da kapıda ödemeyi seçebilirsin.</p>
+  <a class="primary-button" href="{{ url_for('checkout') }}">Tekrar dene <span>→</span></a>
+</section>
+{% endblock %}

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Siparişler | Payidar Yönetim</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}" />
+</head>
+<body class="admin-body">
+  <header class="admin-header">
+    <h1>Payidar <span>Yönetim</span></h1>
+    <a href="{{ url_for('admin_logout') }}">Çıkış yap</a>
+  </header>
+  <main class="admin-main">
+    <h2>Siparişler <small>({{ orders|length }})</small></h2>
+    {% if not orders %}
+      <p class="admin-empty">Henüz sipariş yok.</p>
+    {% else %}
+    <div class="admin-orders">
+      {% for order in orders %}
+      <article class="admin-order-card">
+        <div class="admin-order-head">
+          <strong>#{{ order.id }} — {{ order.customer_name }}</strong>
+          <span class="admin-badge status-{{ order.status }}">{{ order.status }}</span>
+          <span class="admin-badge pay-{{ order.payment_status }}">{{ order.payment_method }} · {{ order.payment_status }}</span>
+        </div>
+        <p class="admin-order-meta">{{ order.created_at.strftime('%d.%m.%Y %H:%M') }} · {{ order.phone }} · {{ order.address }}</p>
+        {% if order.note %}<p class="admin-order-note">Not: {{ order.note }}</p>{% endif %}
+        <ul class="admin-order-items">
+          {% for item in order.items %}
+          <li>{{ item.quantity }}× {{ item.product_name }} — {{ '%.2f'|format(item.line_total_tl) }}₺</li>
+          {% endfor %}
+        </ul>
+        <div class="admin-order-total">Toplam: <strong>{{ '%.2f'|format(order.total_price_tl) }}₺</strong></div>
+      </article>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </main>
+</body>
+</html>

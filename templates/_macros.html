@@ -1,0 +1,20 @@
+{% macro product_card(item) %}
+<article class="product-card" data-category="{{ item.category }}">
+  <div class="product-image">
+    {% if item.image %}
+    <img src="{{ url_for('static', filename=item.image) }}" alt="{{ item.name }}" loading="lazy">
+    {% else %}
+    <div class="product-noimage" aria-hidden="true">🍽️</div>
+    {% endif %}
+    {% if item.tag %}<span class="product-tag">{{ item.tag }}</span>{% endif %}
+  </div>
+  <div class="product-info">
+    <h3>{{ item.name }}</h3>
+    <p>{{ item.description }}</p>
+    <div class="product-bottom">
+      <span class="product-price">{{ item.price }}₺</span>
+      <button class="add-button" data-id="{{ item.id }}" data-name="{{ item.name }}" data-price="{{ item.price }}" data-image="{{ item.image and url_for('static', filename=item.image) or '' }}" aria-label="{{ item.name }} ürününü sepete ekle">+</button>
+    </div>
+  </div>
+</article>
+{% endmacro %}

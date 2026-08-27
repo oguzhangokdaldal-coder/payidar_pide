@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Ödeme | Payidar Pide{% endblock %}
+{% block content %}
+<section class="checkout-section" id="payment">
+  <div class="section-heading">
+    <div><p class="eyebrow">Sipariş #{{ order.id }}</p><h2>Güvenli<br><em>ödeme.</em></h2></div>
+    <p class="section-intro">Ödeme PayTR'nin güvenli sayfası üzerinden alınır, kart bilgilerin bizde tutulmaz.</p>
+  </div>
+  <div class="payment-frame-wrap">
+    <iframe src="https://www.paytr.com/odeme/guvenli/{{ token }}" id="paytriframe" frameborder="0" scrolling="no" style="width:100%; min-height:600px; border:0;"></iframe>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="https://www.paytr.com/js/iframeResizer.min.js"></script>
+<script>if (window.iFrameResize) { iFrameResize({}, '#paytriframe'); }</script>
+{% endblock %}

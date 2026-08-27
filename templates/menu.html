@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_macros.html" import product_card %}
 {% block title %}Menü | Payidar Pide{% endblock %}
 {% block content %}
 <section class="menu-section" id="menu">
@@ -14,20 +15,7 @@
   </div>
   <div class="product-grid" id="productGrid">
     {% for item in products %}
-    <article class="product-card" data-category="{{ item.category }}">
-      <div class="product-image">
-        <img src="{{ item.image }}" alt="{{ item.name }}" loading="lazy">
-        {% if item.tag %}<span class="product-tag">{{ item.tag }}</span>{% endif %}
-      </div>
-      <div class="product-info">
-        <h3>{{ item.name }}</h3>
-        <p>{{ item.description }}</p>
-        <div class="product-bottom">
-          <span class="product-price">{{ item.price }}₺</span>
-          <button class="add-button" data-id="{{ item.id }}" data-name="{{ item.name }}" data-price="{{ item.price }}" data-image="{{ item.image }}" aria-label="{{ item.name }} ürününü sepete ekle">+</button>
-        </div>
-      </div>
-    </article>
+    {{ product_card(item) }}
     {% endfor %}
   </div>
 </section>

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Siparişi Tamamla | Payidar Pide{% endblock %}
+{% block content %}
+<section class="checkout-section" id="checkout">
+  <div class="section-heading">
+    <div><p class="eyebrow">Son adım</p><h2>Siparişi<br><em>tamamla.</em></h2></div>
+    <p class="section-intro">Bilgilerini bırak, ödeme yöntemini seç, sofran hazırlansın.</p>
+  </div>
+  <div class="checkout-grid">
+    <form class="checkout-form" id="checkoutForm" novalidate>
+      <label>Ad Soyad
+        <input type="text" name="customer_name" required autocomplete="name">
+      </label>
+      <label>Telefon
+        <input type="tel" name="phone" required autocomplete="tel" placeholder="05xx xxx xx xx">
+      </label>
+      <label>Teslimat Adresi
+        <textarea name="address" required rows="3" autocomplete="street-address"></textarea>
+      </label>
+      <label>Sipariş Notu <small>(opsiyonel)</small>
+        <textarea name="note" rows="2" placeholder="Zili çalmayın, kapıya bırakın vb."></textarea>
+      </label>
+
+      <fieldset class="payment-methods">
+        <legend>Ödeme yöntemi</legend>
+        <label class="payment-option">
+          <input type="radio" name="payment_method" value="kapida" checked>
+          <span><strong>Kapıda ödeme</strong><small>Nakit veya kart ile kapıda öde</small></span>
+        </label>
+        <label class="payment-option{% if not paytr_enabled %} disabled{% endif %}">
+          <input type="radio" name="payment_method" value="online" {% if not paytr_enabled %}disabled{% endif %}>
+          <span><strong>Online kart ile öde</strong><small>{% if paytr_enabled %}PayTR güvenli ödeme sayfasına yönlendirilirsin{% else %}Şu anda kullanılamıyor{% endif %}</small></span>
+        </label>
+      </fieldset>
+
+      <p class="form-error" id="formError" hidden></p>
+      <button class="primary-button" type="submit" id="submitOrder">Siparişi onayla <span>→</span></button>
+    </form>
+
+    <aside class="order-summary" id="orderSummary" aria-label="Sipariş özeti"></aside>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='checkout.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Siparişin Alındı | Payidar Pide{% endblock %}
+{% block content %}
+<section class="result-section">
+  <span class="result-icon success">✓</span>
+  <h2>Siparişin alındı!</h2>
+  <p>Sipariş numaran <strong>#{{ order.id }}</strong>. {% if order.payment_method == 'online' %}Ödemen alındıktan sonra fırına veriyoruz.{% else %}Kapıda ödeme ile hazırlanıyor.{% endif %}</p>
+  <div class="result-summary">
+    <div><span>Ad Soyad</span><strong>{{ order.customer_name }}</strong></div>
+    <div><span>Adres</span><strong>{{ order.address }}</strong></div>
+    <div><span>Toplam</span><strong>{{ '%.2f'|format(order.total_price_tl) }}₺</strong></div>
+  </div>
+  <a class="primary-button" href="{{ url_for('home') }}">Ana sayfaya dön <span>→</span></a>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+localStorage.removeItem('payidar_cart');
+document.querySelectorAll('#cartCount, #drawerCount').forEach(el => el.textContent = '0');
+document.querySelector('#cartTotal') && (document.querySelector('#cartTotal').textContent = '0₺');
+</script>
+{% endblock %}
