@@ -71,18 +71,24 @@ CAMPAIGNS = [
     {"label": "HAFTANIN PAYLAŞIMI", "title": "2 Pide + 1 Ayran = 490₺", "description": "Payidar Karışık veya Kuşbaşılı Pide'den ikisini seç, yanına ayranı ekleyelim."},
     {"label": "ÖĞLE FIRSATI", "title": "Hafta içi 12:00-15:00 arası %15 indirim", "description": "Tüm pide ve kebaplarda geçerli, ekstra bir işlem gerekmiyor."},
     {"label": "AİLE SOFRASI", "title": "4 Kişilik Karma Menü 990₺", "description": "2 pide, 1 kebap, 2 yan ürün ve 4 ayran bir arada."},
+    {"label": "NAKİT ÖDEMEDE HEDİYE", "title": "Nakit Ödemede Küçük Ayran Hediye", "description": "Siparişini kapıda nakit ödeyene küçük boy yayık ayran bizden."},
 ]
 
-TOPLINE_MESSAGES = [
+TOPLINE_INFO = [
     "🔥 Bugün fırından çıkanlar",
     "🕐 10:00 — 22:00 açığız",
     "📍 Çünür, Isparta",
-] + [f"🎉 {c['title']}" for c in CAMPAIGNS]
+]
 
 
 @app.context_processor
 def inject_topline():
-    return {"topline_messages": TOPLINE_MESSAGES}
+    messages = [{"text": t, "url": None} for t in TOPLINE_INFO]
+    messages += [
+        {"text": f"🎉 {c['title']}", "url": url_for("campaigns") + f"#campaign-{i}"}
+        for i, c in enumerate(CAMPAIGNS)
+    ]
+    return {"topline_messages": messages}
 
 
 @app.route("/")

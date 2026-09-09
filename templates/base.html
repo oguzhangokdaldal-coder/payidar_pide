@@ -14,8 +14,8 @@
 <body>
   <div class="topline">
     <div class="topline-track">
-      {% for msg in topline_messages %}<span class="topline-item">{{ msg }}</span>{% endfor %}
-      {% for msg in topline_messages %}<span class="topline-item" aria-hidden="true">{{ msg }}</span>{% endfor %}
+      {% for msg in topline_messages %}{% if msg.url %}<a class="topline-item" href="{{ msg.url }}">{{ msg.text }}</a>{% else %}<span class="topline-item">{{ msg.text }}</span>{% endif %}{% endfor %}
+      {% for msg in topline_messages %}{% if msg.url %}<a class="topline-item" href="{{ msg.url }}" tabindex="-1" aria-hidden="true">{{ msg.text }}</a>{% else %}<span class="topline-item" aria-hidden="true">{{ msg.text }}</span>{% endif %}{% endfor %}
     </div>
   </div>
   <header class="site-header">

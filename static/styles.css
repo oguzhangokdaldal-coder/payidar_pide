@@ -26,6 +26,7 @@ button { font: inherit; cursor: pointer; }
 .topline:hover .topline-track { animation-play-state: paused; }
 .topline-item { display: inline-flex; align-items: center; padding: 0 2.2vw; }
 .topline-item::after { content: '•'; margin-left: 2.2vw; opacity: .5; }
+a.topline-item:hover { text-decoration: underline; text-underline-offset: 3px; }
 @keyframes topline-scroll {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
@@ -112,8 +113,9 @@ em { color: var(--tomato); font-style: normal; }
 .review-author { font-size: 12px; font-weight: 700; color: var(--muted); }
 .review-author small { font-weight: 400; opacity: .8; }
 .campaign-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
-.campaign-card { background: var(--paper); padding: 26px 24px; display: flex; flex-direction: column; gap: 16px; transition: box-shadow .25s, transform .25s; }
+.campaign-card { background: var(--paper); padding: 26px 24px; display: flex; flex-direction: column; gap: 16px; transition: box-shadow .25s, transform .25s; scroll-margin-top: 110px; }
 .campaign-card:hover { box-shadow: 0 14px 34px #4b34201f; transform: translateY(-3px); }
+.campaign-card:target { box-shadow: 0 0 0 3px var(--tomato), 0 14px 34px #4b34201f; }
 .campaign-card .strip-icon { font-size: 26px; color: var(--orange); }
 .campaign-card-body small { display: block; font-size: 11px; letter-spacing: .13em; color: var(--muted); margin-bottom: 6px; }
 .campaign-card-body strong { display: block; font-family: var(--serif); font-size: 21px; line-height: 1.2; margin-bottom: 10px; }
