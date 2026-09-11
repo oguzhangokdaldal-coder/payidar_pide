@@ -2,6 +2,7 @@ import hmac
 import os
 import secrets
 from datetime import datetime, timedelta
+from pathlib import Path
 
 from dotenv import load_dotenv
 from flask import Flask, flash, jsonify, redirect, render_template, request, session, url_for
@@ -10,7 +11,10 @@ import paytr
 import webhooks
 from models import Order, OrderItem, db
 
-load_dotenv()
+# .env'in yolunu açıkça belirtiyoruz (app.py ile aynı klasörde) — bazı WSGI
+# ortamlarında load_dotenv()'in parametresiz haliyle dosyayı otomatik bulması
+# güvenilir olmuyor.
+load_dotenv(Path(__file__).resolve().parent / ".env")
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-degistir")
