@@ -43,12 +43,33 @@ body.admin-body { margin: 0; background: var(--cream); color: var(--ink); font-f
 .admin-badge.pay-failed { background: #f8dede; color: #92251a; }
 .admin-badge.pay-kapida_odeme { background: #e3e8f5; color: #2c3f8f; }
 .admin-badge.status-onay_bekliyor { background: #fbe6c8; color: #93590c; }
+.admin-badge.status-alindi { background: #e3e8f5; color: #2c3f8f; }
+.admin-badge.status-hazirlaniyor { background: #fbe6c8; color: #93590c; }
+.admin-badge.status-yolda { background: #dce8f8; color: #1f5c9e; }
+.admin-badge.status-teslim_edildi { background: #d8ecd6; color: #2b6b2c; }
+.admin-badge.status-iptal { background: #f8dede; color: #92251a; }
 .admin-order-meta { color: var(--muted); font-size: 13px; margin: 0 0 6px; }
+.admin-order-meta a { color: var(--tomato); font-weight: 700; border-bottom: 1px solid transparent; }
+.admin-order-meta a:hover { border-color: var(--tomato); }
 .admin-order-note { font-size: 13px; margin: 0 0 8px; font-style: italic; color: var(--muted); }
 .admin-order-items { margin: 0 0 10px; padding-left: 18px; font-size: 14px; }
+
+/* Durum ilerleme çubuğu */
+.order-stepper { list-style: none; display: flex; margin: 4px 0 14px; padding: 0; border: 1px solid var(--line); overflow: hidden; }
+.order-step { flex: 1; text-align: center; font-size: 11px; font-weight: 700; letter-spacing: .02em; padding: 8px 6px; background: var(--cream); color: var(--muted); border-right: 1px solid var(--line); }
+.order-step:last-child { border-right: 0; }
+.order-step.done { background: #efe3d3; color: var(--ink); }
+.order-step.current { background: var(--tomato); color: #fff; }
+
+.admin-order-card.is-cancelled { opacity: .6; }
+
 .admin-order-bottom { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
 .admin-order-total { font-size: 15px; }
-.admin-confirm-form { display: flex; align-items: center; gap: 12px; }
+.admin-order-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.admin-status-form { display: flex; align-items: center; gap: 12px; }
 .admin-confirm-code { font-size: 13px; font-weight: 700; letter-spacing: .05em; background: var(--cream); padding: 5px 9px; }
-.admin-confirm-form button { border: 0; background: var(--tomato); color: #fff; font-weight: 700; font-size: 12px; padding: 9px 14px; cursor: pointer; }
-.admin-confirm-form button:hover { background: #963522; }
+.status-btn { border: 0; font-weight: 700; font-size: 12px; padding: 9px 14px; cursor: pointer; }
+.status-btn-primary { background: var(--tomato); color: #fff; }
+.status-btn-primary:hover { background: #963522; }
+.status-btn-cancel { background: transparent; color: #92251a; border: 1px solid #92251a55; }
+.status-btn-cancel:hover { background: #f8dede; }

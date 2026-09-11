@@ -35,6 +35,25 @@ app.config["WHATSAPP_WEBHOOK_SECRET"] = os.environ.get("WHATSAPP_WEBHOOK_SECRET"
 
 ORDER_RATE_LIMIT_WINDOW_MIN = 15
 
+# Sipariş durum akışı: her durumdan hangi durumlara geçilebileceği.
+# "onay_bekliyor" -> alındı ya da iptal; alındı -> hazırlanıyor ya da iptal; ...
+ORDER_STATUS_LABELS = {
+    "onay_bekliyor": "Onay Bekliyor",
+    "alindi": "Alındı",
+    "hazirlaniyor": "Hazırlanıyor",
+    "yolda": "Dağıtıma Çıktı",
+    "teslim_edildi": "Teslim Edildi",
+    "iptal": "İptal Edildi",
+}
+ORDER_STATUS_TRANSITIONS = {
+    "onay_bekliyor": ["alindi", "iptal"],
+    "alindi": ["hazirlaniyor", "iptal"],
+    "hazirlaniyor": ["yolda", "iptal"],
+    "yolda": ["teslim_edildi", "iptal"],
+    "teslim_edildi": [],
+    "iptal": [],
+}
+
 db.init_app(app)
 with app.app_context():
     db.create_all()
@@ -315,17 +334,24 @@ def admin_orders():
     if not session.get("is_admin"):
         return redirect(url_for("admin_login"))
     orders = Order.query.order_by(Order.created_at.desc()).all()
-    return render_template("admin_orders.html", orders=orders)
+    return render_template(
+        "admin_orders.html",
+        orders=orders,
+        status_labels=ORDER_STATUS_LABELS,
+        status_transitions=ORDER_STATUS_TRANSITIONS,
+    )
 
 
-@app.route("/admin/siparisler/<int:order_id>/onayla", methods=["POST"])
-def admin_confirm_order(order_id):
+@app.route("/admin/siparisler/<int:order_id>/durum", methods=["POST"])
+def admin_update_order_status(order_id):
     if not session.get("is_admin"):
         return redirect(url_for("admin_login"))
     order = Order.query.get_or_404(order_id)
-    if order.status == "onay_bekliyor":
-        order.status = "alindi"
-        order.confirmed_at = datetime.utcnow()
+    new_status = request.form.get("durum", "")
+    if new_status in ORDER_STATUS_TRANSITIONS.get(order.status, []):
+        order.status = new_status
+        if new_status == "alindi":
+            order.confirmed_at = datetime.utcnow()
         db.session.commit()
     return redirect(url_for("admin_orders"))
 
