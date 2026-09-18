@@ -26,14 +26,16 @@ body.admin-body { margin: 0; background: var(--cream); color: var(--ink); font-f
 .admin-header { display: flex; justify-content: space-between; align-items: center; padding: 22px 5vw; border-bottom: 1px solid var(--line); background: var(--paper); }
 .admin-header h1 { font-family: var(--serif); font-size: 22px; margin: 0; }
 .admin-header h1 span { color: var(--tomato); }
-.admin-header a { font-size: 13px; font-weight: 700; border-bottom: 1px solid var(--ink); padding-bottom: 2px; }
-.admin-header-links { display: flex; align-items: center; gap: 20px; }
+.admin-header a { font-size: 13px; font-weight: 700; border-bottom: 1px solid transparent; padding-bottom: 2px; color: var(--muted); transition: color .2s, border-color .2s; }
+.admin-header a:hover, .admin-header a.active { color: var(--ink); border-color: var(--ink); }
+.admin-header-links { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
 
 .admin-main { max-width: 900px; margin: auto; padding: 40px 5vw 80px; }
 .admin-main h2 { font-family: var(--serif); font-size: 26px; margin: 0 0 24px; }
 .admin-main h2 small { color: var(--muted); font-size: 16px; font-family: var(--sans); }
 .admin-empty { color: var(--muted); }
 .admin-main-board { max-width: 100%; padding: 32px 3vw 40px; }
+.admin-main-wide { max-width: 1200px; padding: 40px 3vw 80px; }
 
 /* Sütunlu (kanban) sipariş panosu — her durum kendi kutusunda */
 .order-board { display: flex; gap: 16px; align-items: start; overflow-x: auto; padding-bottom: 16px; }
@@ -85,3 +87,30 @@ body.admin-body { margin: 0; background: var(--cream); color: var(--ink); font-f
 .admin-settings-row input { padding: 12px 14px; border: 1px solid var(--line); background: #fff; font: inherit; }
 .admin-settings-form button { background: var(--tomato); color: #fff; border: 0; padding: 12px 20px; font-weight: 700; cursor: pointer; }
 .admin-settings-form button:hover { background: #963522; }
+
+.admin-force-closed { margin-bottom: 24px; border-left: 4px solid var(--line); }
+.admin-force-closed.is-closed { border-left-color: #92251a; background: #fdf3f3; }
+.btn-close-now { background: #92251a !important; }
+.btn-close-now:hover { background: #6f1c14 !important; }
+.btn-reopen { background: #2b6b2c !important; }
+.btn-reopen:hover { background: #1f4e20 !important; }
+
+/* Menü / kampanya / bant düzenleme tabloları */
+.admin-menu-category { margin-bottom: 32px; }
+.admin-menu-category h3 { font-family: var(--serif); font-size: 19px; margin: 0 0 10px; text-transform: capitalize; }
+.admin-menu-table { display: flex; flex-direction: column; gap: 6px; overflow-x: auto; }
+.admin-menu-row { display: flex; align-items: center; gap: 6px; background: var(--paper); padding: 8px; box-shadow: 0 2px 8px #4b34200a; min-width: max-content; }
+.admin-menu-row.is-inactive { opacity: .55; }
+.admin-menu-row-head { background: transparent; box-shadow: none; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; padding: 0 8px; }
+.admin-menu-row input[type="text"], .admin-menu-row input[type="number"] { padding: 8px 9px; border: 1px solid var(--line); background: #fff; font: inherit; font-size: 13px; }
+.admin-menu-row .col-category { width: 90px; }
+.admin-menu-row .col-name { width: 170px; }
+.admin-menu-row .col-name-wide { width: 320px; }
+.admin-menu-row .col-desc { width: 220px; }
+.admin-menu-row .col-price { width: 70px; }
+.admin-menu-row .col-tag { width: 90px; }
+.admin-menu-row .col-image { width: 160px; }
+.admin-menu-row .col-order { width: 60px; }
+.admin-menu-row .col-active { width: 40px; text-align: center; }
+.admin-menu-row .col-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.admin-menu-row .col-actions .status-btn { width: auto; white-space: nowrap; }

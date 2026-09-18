@@ -55,9 +55,49 @@ class OrderItem(db.Model):
 
 class Setting(db.Model):
     """Yönetim panelinden değiştirilebilen basit anahtar/değer ayarları
-    (örn. çalışma saatleri). .env'deki değerler yalnızca ilk/varsayılan
-    değer olarak kullanılır, buradaki kayıt varsa onu geçersiz kılar."""
+    (örn. çalışma saatleri, elle kapalı anahtarı). .env'deki değerler
+    yalnızca ilk/varsayılan değer olarak kullanılır, buradaki kayıt varsa
+    onu geçersiz kılar."""
     __tablename__ = "settings"
 
     key = db.Column(db.String(50), primary_key=True)
     value = db.Column(db.String(200), nullable=False)
+
+
+class Product(db.Model):
+    """Menü ürünü. Eskiden app.py içinde sabit kodlu bir liste olan PRODUCTS'ın
+    yerini alır — yönetim panelinden (/admin/menu) düzenlenebilir."""
+    __tablename__ = "products"
+
+    id = db.Column(db.Integer, primary_key=True)
+    category = db.Column(db.String(30), nullable=False)
+    name = db.Column(db.String(120), nullable=False)
+    description = db.Column(db.String(300), default="")
+    price = db.Column(db.Integer, nullable=False)  # ₺ (tam sayı)
+    tag = db.Column(db.String(30), default="")
+    image = db.Column(db.String(200), default="")
+    is_active = db.Column(db.Boolean, default=True)  # false: menüde gizli (tükendi vb.)
+    sort_order = db.Column(db.Integer, default=0)
+
+
+class Campaign(db.Model):
+    """Kampanya. Eskiden app.py içinde sabit kodlu CAMPAIGNS listesinin
+    yerini alır — yönetim panelinden (/admin/kampanyalar) düzenlenebilir."""
+    __tablename__ = "campaigns"
+
+    id = db.Column(db.Integer, primary_key=True)
+    label = db.Column(db.String(60), nullable=False)
+    title = db.Column(db.String(150), nullable=False)
+    description = db.Column(db.String(300), default="")
+    sort_order = db.Column(db.Integer, default=0)
+
+
+class ToplineMessage(db.Model):
+    """Üstte kayan bandın sabit (kampanya olmayan) mesajları — örn. çalışma
+    saatleri dışındaki genel duyurular. Yönetim panelinden (/admin/bant)
+    düzenlenebilir."""
+    __tablename__ = "topline_messages"
+
+    id = db.Column(db.Integer, primary_key=True)
+    text = db.Column(db.String(150), nullable=False)
+    sort_order = db.Column(db.Integer, default=0)

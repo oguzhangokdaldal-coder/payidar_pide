@@ -1,0 +1,43 @@
+{% from "_admin_macros.html" import admin_header %}
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Üst Bant | Payidar Yönetim</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}" />
+</head>
+<body class="admin-body">
+  {{ admin_header('bant') }}
+  <main class="admin-main admin-main-wide">
+    <h2>Üst Bant</h2>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}<p class="admin-flash">{{ messages[0] }}</p>{% endif %}
+    {% endwith %}
+    <p class="admin-settings-hint">Sitenin en üstünde kayan sabit duyuru mesajları — çalışma saati ve kampanyalar buna otomatik eklenir, burada onları ayrıca yönetmene gerek yok.</p>
+
+    <div class="admin-menu-table">
+      <div class="admin-menu-row admin-menu-row-head">
+        <span class="col-name-wide">Mesaj</span>
+        <span class="col-order">Sıra</span>
+        <span class="col-actions"></span>
+      </div>
+      {% for m in messages %}
+      <form method="post" action="{{ url_for('admin_topline_edit', message_id=m.id) }}" class="admin-menu-row">
+        <input type="text" name="text" value="{{ m.text }}" class="col-name-wide" required>
+        <input type="number" name="sort_order" value="{{ m.sort_order }}" class="col-order">
+        <span class="col-actions">
+          <button type="submit" class="status-btn status-btn-primary">Kaydet</button>
+          <button type="submit" formaction="{{ url_for('admin_topline_delete', message_id=m.id) }}" class="status-btn status-btn-cancel" onclick="return confirm('Bu mesaj silinsin mi?');">Sil</button>
+        </span>
+      </form>
+      {% endfor %}
+      <form method="post" action="{{ url_for('admin_topline_add') }}" class="admin-menu-row">
+        <input type="text" name="text" placeholder="🎂 Yeni duyuru mesajı" class="col-name-wide" required>
+        <input type="number" name="sort_order" placeholder="0" class="col-order">
+        <span class="col-actions"><button type="submit" class="status-btn status-btn-primary">Ekle</button></span>
+      </form>
+    </div>
+  </main>
+</body>
+</html>

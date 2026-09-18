@@ -8,7 +8,7 @@
   </div>
   <div class="campaign-grid">
     {% for c in campaigns %}
-    <article class="campaign-card" id="campaign-{{ loop.index0 }}">
+    <article class="campaign-card" id="campaign-{{ c.id }}">
       <span class="strip-icon">✦</span>
       <div class="campaign-card-body">
         <small>{{ c.label }}</small>

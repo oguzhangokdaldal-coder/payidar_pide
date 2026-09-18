@@ -1,0 +1,72 @@
+{% from "_admin_macros.html" import admin_header %}
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Menü | Payidar Yönetim</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}" />
+</head>
+<body class="admin-body">
+  {{ admin_header('menu') }}
+  <main class="admin-main admin-main-wide">
+    <h2>Menü</h2>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}<p class="admin-flash">{{ messages[0] }}</p>{% endif %}
+    {% endwith %}
+    <p class="admin-settings-hint">Fiyat, ad, açıklama, etiket her an değiştirilebilir. "Aktif" işareti kaldırılırsa ürün menüden gizlenir (silinmez) — geçici tükenmelerde bunu kullan. Görsel alanına <code>static/</code> klasöründeki dosya yolunu yaz (örn. <code>img/kiymali.jpg</code>); dosyanın kendisini yüklemek için hâlâ ayrıca gönderilmesi gerekir.</p>
+
+    {% for category, products in by_category.items() %}
+    <section class="admin-menu-category">
+      <h3>{{ category }}</h3>
+      <div class="admin-menu-table">
+        <div class="admin-menu-row admin-menu-row-head">
+          <span class="col-category">Kategori</span>
+          <span class="col-name">Ad</span>
+          <span class="col-desc">Açıklama</span>
+          <span class="col-price">₺</span>
+          <span class="col-tag">Etiket</span>
+          <span class="col-image">Görsel</span>
+          <span class="col-active">Aktif</span>
+          <span class="col-actions"></span>
+        </div>
+        {% for p in products %}
+        <form method="post" action="{{ url_for('admin_menu_edit', product_id=p.id) }}" class="admin-menu-row{% if not p.is_active %} is-inactive{% endif %}">
+          <input type="text" name="category" value="{{ p.category }}" class="col-category">
+          <input type="text" name="name" value="{{ p.name }}" class="col-name" required>
+          <input type="text" name="description" value="{{ p.description }}" class="col-desc">
+          <input type="number" name="price" value="{{ p.price }}" min="1" class="col-price" required>
+          <input type="text" name="tag" value="{{ p.tag }}" class="col-tag">
+          <input type="text" name="image" value="{{ p.image }}" class="col-image">
+          <label class="col-active"><input type="checkbox" name="is_active" {% if p.is_active %}checked{% endif %}></label>
+          <span class="col-actions">
+            <button type="submit" class="status-btn status-btn-primary">Kaydet</button>
+            <button type="submit" formaction="{{ url_for('admin_menu_delete', product_id=p.id) }}" class="status-btn status-btn-cancel" onclick="return confirm('{{ p.name }} tamamen silinsin mi? (Geri alınamaz — geçici kaldırmak için Aktif kutusunu kapat.)');">Sil</button>
+          </span>
+        </form>
+        {% endfor %}
+      </div>
+    </section>
+    {% endfor %}
+
+    <section class="admin-menu-category">
+      <h3>Yeni ürün ekle</h3>
+      <div class="admin-menu-table">
+        <form method="post" action="{{ url_for('admin_menu_add') }}" class="admin-menu-row">
+          <input type="text" name="category" list="categoryList" placeholder="kategori" class="col-category" required>
+          <datalist id="categoryList">
+            {% for category in by_category.keys() %}<option value="{{ category }}">{% endfor %}
+          </datalist>
+          <input type="text" name="name" placeholder="Ürün adı" class="col-name" required>
+          <input type="text" name="description" placeholder="Açıklama" class="col-desc">
+          <input type="number" name="price" placeholder="Fiyat" min="1" class="col-price" required>
+          <input type="text" name="tag" placeholder="Yeni/Favori" class="col-tag">
+          <input type="text" name="image" placeholder="img/....jpg" class="col-image">
+          <span class="col-active"></span>
+          <span class="col-actions"><button type="submit" class="status-btn status-btn-primary">Ekle</button></span>
+        </form>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

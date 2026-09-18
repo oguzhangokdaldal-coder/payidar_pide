@@ -1,0 +1,49 @@
+{% from "_admin_macros.html" import admin_header %}
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kampanyalar | Payidar Yönetim</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}" />
+</head>
+<body class="admin-body">
+  {{ admin_header('kampanyalar') }}
+  <main class="admin-main admin-main-wide">
+    <h2>Kampanyalar</h2>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}<p class="admin-flash">{{ messages[0] }}</p>{% endif %}
+    {% endwith %}
+    <p class="admin-settings-hint">Bu kampanyalar hem /kampanyalar sayfasında kart olarak, hem de üstteki kayan bantta 🎉 ile gösterilir. "Sıra" küçük olan önce çıkar.</p>
+
+    <div class="admin-menu-table">
+      <div class="admin-menu-row admin-menu-row-head">
+        <span class="col-tag">Etiket</span>
+        <span class="col-name">Başlık</span>
+        <span class="col-desc">Açıklama</span>
+        <span class="col-order">Sıra</span>
+        <span class="col-actions"></span>
+      </div>
+      {% for c in campaigns %}
+      <form method="post" action="{{ url_for('admin_campaigns_edit', campaign_id=c.id) }}" class="admin-menu-row">
+        <input type="text" name="label" value="{{ c.label }}" class="col-tag">
+        <input type="text" name="title" value="{{ c.title }}" class="col-name" required>
+        <input type="text" name="description" value="{{ c.description }}" class="col-desc">
+        <input type="number" name="sort_order" value="{{ c.sort_order }}" class="col-order">
+        <span class="col-actions">
+          <button type="submit" class="status-btn status-btn-primary">Kaydet</button>
+          <button type="submit" formaction="{{ url_for('admin_campaigns_delete', campaign_id=c.id) }}" class="status-btn status-btn-cancel" onclick="return confirm('Bu kampanya silinsin mi?');">Sil</button>
+        </span>
+      </form>
+      {% endfor %}
+      <form method="post" action="{{ url_for('admin_campaigns_add') }}" class="admin-menu-row">
+        <input type="text" name="label" placeholder="ETİKET" class="col-tag">
+        <input type="text" name="title" placeholder="Kampanya başlığı" class="col-name" required>
+        <input type="text" name="description" placeholder="Açıklama" class="col-desc">
+        <input type="number" name="sort_order" placeholder="0" class="col-order">
+        <span class="col-actions"><button type="submit" class="status-btn status-btn-primary">Ekle</button></span>
+      </form>
+    </div>
+  </main>
+</body>
+</html>

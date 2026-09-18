@@ -1,3 +1,4 @@
+{% from "_admin_macros.html" import admin_header %}
 <!doctype html>
 <html lang="tr">
 <head>
@@ -7,13 +8,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}" />
 </head>
 <body class="admin-body">
-  <header class="admin-header">
-    <h1>Payidar <span>Yönetim</span></h1>
-    <div class="admin-header-links">
-      <a href="{{ url_for('admin_settings') }}">Ayarlar</a>
-      <a href="{{ url_for('admin_logout') }}">Çıkış yap</a>
-    </div>
-  </header>
+  {{ admin_header('siparisler') }}
   <main class="admin-main admin-main-board">
     <h2>Siparişler <small>({{ total_count }})</small></h2>
     {% if not total_count %}

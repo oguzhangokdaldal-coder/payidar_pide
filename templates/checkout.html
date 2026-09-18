@@ -7,7 +7,10 @@
     <p class="section-intro">Bilgilerini bırak, ödeme yöntemini seç, sofran hazırlansın.</p>
   </div>
   {% if not shop_open %}
-  <p class="closed-banner">🌙 Şu an kapalıyız. Çalışma saatlerimiz: {{ opening_str }}–{{ closing_str }}. Lütfen açılış saatinde tekrar dene.</p>
+  <p class="closed-banner">
+    {% if force_closed %}🌙 Şu an kapalıyız. Yeniden ne zaman açılacağımızı buradan takip edebilirsin.
+    {% else %}🌙 Şu an kapalıyız. Çalışma saatlerimiz: {{ opening_str }}–{{ closing_str }}. Lütfen açılış saatinde tekrar dene.{% endif %}
+  </p>
   {% endif %}
   <div class="checkout-grid">
     <form class="checkout-form" id="checkoutForm" novalidate data-shop-open="{{ 'true' if shop_open else 'false' }}">
