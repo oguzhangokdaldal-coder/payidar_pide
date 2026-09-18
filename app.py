@@ -464,15 +464,46 @@ def admin_logout():
     return redirect(url_for("admin_login"))
 
 
+def _period_start_utc(period):
+    """Seçili dönemin (Türkiye saatiyle) başlangıcını, DB'deki created_at ile
+    karşılaştırılabilecek naive UTC datetime olarak döndürür."""
+    now_tr = datetime.now(TR_TZ)
+    if period == "hafta":
+        start_local = (now_tr - timedelta(days=now_tr.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
+    else:  # "bugun"
+        start_local = now_tr.replace(hour=0, minute=0, second=0, microsecond=0)
+    return start_local.astimezone(ZoneInfo("UTC")).replace(tzinfo=None)
+
+
 @app.route("/admin/siparisler")
 def admin_orders():
     if not session.get("is_admin"):
         return redirect(url_for("admin_login"))
-    orders = Order.query.order_by(Order.created_at.desc()).all()
+
+    period = request.args.get("donem", "bugun")
+    if period not in ("bugun", "hafta", "tumu"):
+        period = "bugun"
+
+    query = Order.query
+    if period != "tumu":
+        query = query.filter(Order.created_at >= _period_start_utc(period))
+    orders = query.order_by(Order.created_at.desc()).all()
+
     orders_by_status = {status: [] for status in ORDER_STATUS_COLUMNS}
     for order in orders:
         orders_by_status.setdefault(order.status, []).append(order)
     zone_names = {z["slug"]: z["name"] for z in DELIVERY_ZONES}
+
+    success_orders = orders_by_status.get("teslim_edildi", [])
+    cancel_orders = orders_by_status.get("iptal", [])
+    stats = {
+        "total": len(orders),
+        "success": len(success_orders),
+        "cancelled": len(cancel_orders),
+        "revenue_tl": sum(o.total_price_tl for o in success_orders),
+        "lost_tl": sum(o.total_price_tl for o in cancel_orders),
+    }
+
     return render_template(
         "admin_orders.html",
         columns=ORDER_STATUS_COLUMNS,
@@ -481,6 +512,8 @@ def admin_orders():
         status_labels=ORDER_STATUS_LABELS,
         status_transitions=ORDER_STATUS_TRANSITIONS,
         zone_names=zone_names,
+        period=period,
+        stats=stats,
     )
 
 

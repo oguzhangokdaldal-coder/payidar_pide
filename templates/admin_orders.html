@@ -11,8 +11,23 @@
   {{ admin_header('siparisler') }}
   <main class="admin-main admin-main-board">
     <h2>Siparişler <small>({{ total_count }})</small></h2>
+
+    <div class="period-tabs">
+      <a href="{{ url_for('admin_orders', donem='bugun') }}"{% if period == 'bugun' %} class="active"{% endif %}>Bugün</a>
+      <a href="{{ url_for('admin_orders', donem='hafta') }}"{% if period == 'hafta' %} class="active"{% endif %}>Bu Hafta</a>
+      <a href="{{ url_for('admin_orders', donem='tumu') }}"{% if period == 'tumu' %} class="active"{% endif %}>Tümü</a>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card"><span class="stat-value">{{ stats.total }}</span><span class="stat-label">Toplam Sipariş</span></div>
+      <div class="stat-card stat-success"><span class="stat-value">{{ stats.success }}</span><span class="stat-label">Başarılı (Teslim Edildi)</span></div>
+      <div class="stat-card stat-cancel"><span class="stat-value">{{ stats.cancelled }}</span><span class="stat-label">İptal</span></div>
+      <div class="stat-card stat-revenue"><span class="stat-value">{{ '%.0f'|format(stats.revenue_tl) }}₺</span><span class="stat-label">Ciro</span></div>
+      <div class="stat-card stat-loss"><span class="stat-value">{{ '%.0f'|format(stats.lost_tl) }}₺</span><span class="stat-label">İptalden Kayıp</span></div>
+    </div>
+
     {% if not total_count %}
-      <p class="admin-empty">Henüz sipariş yok.</p>
+      <p class="admin-empty">Bu dönemde sipariş yok.</p>
     {% else %}
     <div class="order-board">
       {% for status in columns %}

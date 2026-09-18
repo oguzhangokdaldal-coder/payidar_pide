@@ -37,6 +37,23 @@ body.admin-body { margin: 0; background: var(--cream); color: var(--ink); font-f
 .admin-main-board { max-width: 100%; padding: 32px 3vw 40px; }
 .admin-main-wide { max-width: 1200px; padding: 40px 3vw 80px; }
 
+/* Dönem sekmeleri + istatistik satırı */
+.period-tabs { display: flex; gap: 8px; margin-bottom: 18px; }
+.period-tabs a { padding: 8px 16px; font-size: 13px; font-weight: 700; background: var(--paper); color: var(--muted); border: 1px solid var(--line); }
+.period-tabs a.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+.period-tabs a:hover:not(.active) { border-color: var(--tomato); color: var(--tomato); }
+
+.stats-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+.stat-card { flex: 1; min-width: 130px; background: var(--paper); padding: 16px 18px; box-shadow: 0 6px 16px #4b34200f; display: flex; flex-direction: column; gap: 4px; }
+.stat-value { font-family: var(--serif); font-size: 26px; font-weight: 800; }
+.stat-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }
+.stat-success .stat-value { color: #2b6b2c; }
+.stat-cancel .stat-value { color: #92251a; }
+.stat-revenue { background: var(--ink); }
+.stat-revenue .stat-value { color: #fff; }
+.stat-revenue .stat-label { color: #cfc7ba; }
+.stat-loss .stat-value { color: #92251a; }
+
 /* Sütunlu (kanban) sipariş panosu — her durum kendi kutusunda */
 .order-board { display: flex; gap: 16px; align-items: start; overflow-x: auto; padding-bottom: 16px; }
 .order-column { flex: 0 0 300px; background: #efe7d8; display: flex; flex-direction: column; max-height: calc(100vh - 200px); }
