@@ -1,4 +1,5 @@
 import hmac
+import json
 import os
 import secrets
 from datetime import datetime, timedelta
@@ -8,10 +9,11 @@ from zoneinfo import ZoneInfo
 
 from dotenv import load_dotenv
 from flask import Flask, flash, jsonify, redirect, render_template, request, session, url_for
+from werkzeug.security import check_password_hash, generate_password_hash
 
 import paytr
 import webhooks
-from models import Campaign, Order, OrderItem, Product, Setting, ToplineMessage, db
+from models import Campaign, Customer, Order, OrderItem, Product, Setting, ToplineMessage, db
 
 # .env'in yolunu açıkça belirtiyoruz (app.py ile aynı klasörde) — bazı WSGI
 # ortamlarında load_dotenv()'in parametresiz haliyle dosyayı otomatik bulması
@@ -190,6 +192,130 @@ def get_products(active_only=True):
     return query.order_by(Product.category, Product.sort_order, Product.id).all()
 
 
+# ---------------------------------------------------------------------------
+# Kampanya kuralları — kampanyanın kartta yazan açıklaması artık gerçekten
+# uygulanıyor: sepete uygun ürün eklenince hediye satırı ya da indirim satırı
+# otomatik ekleniyor. Tarihler ve saatler Türkiye yerel saatiyle karşılaştırılır.
+# ---------------------------------------------------------------------------
+
+CAMPAIGN_RULE_LABELS = {
+    "": "Kural yok (sadece bilgilendirme kartı)",
+    "bogo": "Kategoriden N adet alana 1 ürün hediye",
+    "time_percent": "Gün/saat aralığında yüzde indirim",
+    "payment_gift": "Ödeme yöntemine göre ürün hediye",
+    "min_amount_discount": "Sepet tutarı eşiğinde sabit indirim",
+}
+_WEEKDAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+
+
+def _campaign_params(campaign):
+    try:
+        return json.loads(campaign.rule_params) if campaign.rule_params else {}
+    except (ValueError, TypeError):
+        return {}
+
+
+def _campaign_in_date_range(campaign, now_naive):
+    if campaign.start_at and now_naive < campaign.start_at:
+        return False
+    if campaign.end_at and now_naive > campaign.end_at:
+        return False
+    return True
+
+
+def apply_campaign_rules(order_items, payment_method, now_tr=None):
+    """Aktif kampanya kurallarını sepete uygular: koşul sağlanırsa hediye
+    ürün (fiyatı 0) ya da indirim satırı (negatif tutarlı) order_items'a
+    eklenir. order_items yerinde değiştirilir. Yeni toplam (kuruş) ve
+    uygulanan kampanya başlıklarının listesini döner."""
+    now_tr = now_tr or datetime.now(TR_TZ)
+    now_naive = now_tr.replace(tzinfo=None)
+    today_key = _WEEKDAY_KEYS[now_tr.weekday()]
+    current_time = now_tr.time()
+
+    cart_categories = {}
+    for item in order_items:
+        product = Product.query.get(item.product_id)
+        if product:
+            cart_categories[product.category] = cart_categories.get(product.category, 0) + item.quantity
+
+    applied = []
+    active_rules = Campaign.query.filter(Campaign.rule_type.isnot(None), Campaign.rule_type != "").all()
+    for c in active_rules:
+        if not _campaign_in_date_range(c, now_naive):
+            continue
+        params = _campaign_params(c)
+
+        if c.rule_type == "bogo":
+            category = params.get("category")
+            threshold = int(params.get("threshold") or 0)
+            free_product = Product.query.get(params.get("free_product_id")) if params.get("free_product_id") else None
+            if category and threshold and free_product and cart_categories.get(category, 0) >= threshold:
+                order_items.append(OrderItem(
+                    product_id=free_product.id,
+                    product_name=f"{free_product.name} (Kampanya Hediyesi)",
+                    unit_price=0, quantity=1,
+                ))
+                applied.append(c.title)
+
+        elif c.rule_type == "payment_gift":
+            free_product = Product.query.get(params.get("free_product_id")) if params.get("free_product_id") else None
+            if params.get("payment_method") == payment_method and free_product:
+                order_items.append(OrderItem(
+                    product_id=free_product.id,
+                    product_name=f"{free_product.name} (Kampanya Hediyesi)",
+                    unit_price=0, quantity=1,
+                ))
+                applied.append(c.title)
+
+        elif c.rule_type == "time_percent":
+            days = [d.strip() for d in (params.get("days") or "").split(",") if d.strip()]
+            start_time = _parse_hhmm(params.get("start_time"), None)
+            end_time = _parse_hhmm(params.get("end_time"), None)
+            percent = int(params.get("percent") or 0)
+            category = (params.get("category") or "").strip()
+            in_day = not days or today_key in days
+            in_time = start_time and end_time and start_time <= current_time < end_time
+            if in_day and in_time and percent > 0:
+                if category:
+                    relevant_kurus = sum(
+                        i.unit_price * i.quantity for i in order_items
+                        if (Product.query.get(i.product_id) or None) and Product.query.get(i.product_id).category == category
+                    )
+                else:
+                    relevant_kurus = sum(i.unit_price * i.quantity for i in order_items)
+                discount_kurus = int(relevant_kurus * percent / 100)
+                if discount_kurus > 0:
+                    order_items.append(OrderItem(
+                        product_id=0, product_name=f"{c.title} (%{percent} indirim)",
+                        unit_price=-discount_kurus, quantity=1,
+                    ))
+                    applied.append(c.title)
+
+        elif c.rule_type == "min_amount_discount":
+            threshold_kurus = int(params.get("threshold") or 0) * 100
+            discount_kurus = int(params.get("discount_amount") or 0) * 100
+            current_total = sum(i.unit_price * i.quantity for i in order_items)
+            if threshold_kurus and discount_kurus and current_total >= threshold_kurus:
+                order_items.append(OrderItem(
+                    product_id=0, product_name=f"{c.title} (indirim)",
+                    unit_price=-discount_kurus, quantity=1,
+                ))
+                applied.append(c.title)
+
+    new_total = max(sum(i.unit_price * i.quantity for i in order_items), 0)
+    return new_total, applied
+
+
+def get_visible_campaigns():
+    """Sitede (kampanyalar sayfası + bant) gösterilecek kampanyalar — tarih
+    aralığı dışına çıkmış olanlar otomatik gizlenir. Yönetim panelinde ise
+    düzenleyebilmek için hepsi gösterilir."""
+    now_naive = datetime.now(TR_TZ).replace(tzinfo=None)
+    all_campaigns = Campaign.query.order_by(Campaign.sort_order, Campaign.id).all()
+    return [c for c in all_campaigns if _campaign_in_date_range(c, now_naive)]
+
+
 @app.context_processor
 def inject_topline():
     opening, closing = get_working_hours()
@@ -202,9 +328,16 @@ def inject_topline():
     messages.insert(min(1, len(messages)), {"text": hours_message, "url": None})
     messages += [
         {"text": f"🎉 {c.title}", "url": url_for("campaigns") + f"#campaign-{c.id}"}
-        for c in Campaign.query.order_by(Campaign.sort_order, Campaign.id).all()
+        for c in get_visible_campaigns()
     ]
     return {"topline_messages": messages}
+
+
+@app.context_processor
+def inject_customer():
+    customer_id = session.get("customer_id")
+    customer = Customer.query.get(customer_id) if customer_id else None
+    return {"current_customer": customer}
 
 
 @app.route("/")
@@ -220,8 +353,7 @@ def menu():
 
 @app.route("/kampanyalar")
 def campaigns():
-    all_campaigns = Campaign.query.order_by(Campaign.sort_order, Campaign.id).all()
-    return render_template("campaigns.html", campaigns=all_campaigns, active="campaigns")
+    return render_template("campaigns.html", campaigns=get_visible_campaigns(), active="campaigns")
 
 
 @app.route("/biz-kimiz")
@@ -232,6 +364,81 @@ def about():
 @app.route("/iletisim")
 def contact():
     return render_template("contact.html", active="contact")
+
+
+# ---------------------------------------------------------------------------
+# Müşteri hesabı (opsiyonel — misafir siparişi hâlâ mümkün)
+# ---------------------------------------------------------------------------
+
+@app.route("/kayit", methods=["GET", "POST"])
+def customer_register():
+    if session.get("customer_id"):
+        return redirect(url_for("account"))
+    if request.method == "POST":
+        name = (request.form.get("name") or "").strip()
+        email = (request.form.get("email") or "").strip().lower()
+        phone = (request.form.get("phone") or "").strip()
+        password = request.form.get("password") or ""
+        if not name or not email or len(password) < 6:
+            flash("Ad soyad, e-posta zorunlu; şifre en az 6 karakter olmalı.")
+        elif Customer.query.filter_by(email=email).first():
+            flash("Bu e-posta ile zaten bir hesap var, giriş yapmayı dene.")
+        else:
+            customer = Customer(
+                name=name,
+                email=email,
+                phone=phone,
+                password_hash=generate_password_hash(password),
+            )
+            db.session.add(customer)
+            db.session.commit()
+            session["customer_id"] = customer.id
+            flash("Hoş geldin! Hesabın oluşturuldu.")
+            return redirect(url_for("account"))
+    return render_template("register.html", active="account")
+
+
+@app.route("/giris", methods=["GET", "POST"])
+def customer_login():
+    if session.get("customer_id"):
+        return redirect(url_for("account"))
+    if request.method == "POST":
+        email = (request.form.get("email") or "").strip().lower()
+        password = request.form.get("password") or ""
+        customer = Customer.query.filter_by(email=email).first()
+        if customer and check_password_hash(customer.password_hash, password):
+            session["customer_id"] = customer.id
+            return redirect(request.args.get("next") or url_for("account"))
+        flash("E-posta ya da şifre hatalı.")
+    return render_template("login.html", active="account")
+
+
+@app.route("/cikis")
+def customer_logout():
+    session.pop("customer_id", None)
+    return redirect(url_for("home"))
+
+
+@app.route("/hesabim", methods=["GET", "POST"])
+def account():
+    customer = Customer.query.get(session.get("customer_id"))
+    if not customer:
+        return redirect(url_for("customer_login", next=url_for("account")))
+    if request.method == "POST":
+        customer.name = (request.form.get("name") or customer.name).strip()
+        customer.phone = (request.form.get("phone") or "").strip()
+        customer.address = (request.form.get("address") or "").strip()
+        db.session.commit()
+        flash("Bilgilerin güncellendi.")
+        return redirect(url_for("account"))
+    orders = Order.query.filter_by(customer_id=customer.id).order_by(Order.created_at.desc()).all()
+    return render_template(
+        "account.html",
+        active="account",
+        customer=customer,
+        orders=orders,
+        status_labels=ORDER_STATUS_LABELS,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -320,6 +527,10 @@ def create_order():
                   f"— sepetinize {eksik_tl:.0f}₺ daha ekleyin."
         ), 400
 
+    # Minimum sepet kontrolünden SONRA uygulanır — bir kampanya indirimi
+    # müşteriyi yapay şekilde minimumun altına düşürmesin diye.
+    total_kurus, applied_campaigns = apply_campaign_rules(order_items, payment_method)
+
     if payment_method == "online" and not app.config["PAYTR_MERCHANT_ID"]:
         return jsonify(error="Online ödeme şu anda kullanılamıyor, kapıda ödemeyi seçin."), 503
 
@@ -335,6 +546,7 @@ def create_order():
             return jsonify(error="Onay bekleyen bir siparişiniz zaten var, lütfen onaylanmasını bekleyin."), 429
 
     order = Order(
+        customer_id=session.get("customer_id"),
         customer_name=customer_name,
         phone=phone,
         address=address,
@@ -643,7 +855,13 @@ def admin_campaigns():
     if not session.get("is_admin"):
         return redirect(url_for("admin_login"))
     all_campaigns = Campaign.query.order_by(Campaign.sort_order, Campaign.id).all()
-    return render_template("admin_campaigns.html", campaigns=all_campaigns)
+    return render_template(
+        "admin_campaigns.html",
+        campaigns=all_campaigns,
+        rule_labels=CAMPAIGN_RULE_LABELS,
+        all_products=Product.query.order_by(Product.category, Product.name).all(),
+        campaign_params=_campaign_params,
+    )
 
 
 @app.route("/admin/kampanyalar/ekle", methods=["POST"])
@@ -683,6 +901,55 @@ def admin_campaigns_edit(campaign_id):
         flash("Kampanya güncellendi.")
     else:
         flash("Kampanya başlığı zorunlu.")
+    return redirect(url_for("admin_campaigns"))
+
+
+@app.route("/admin/kampanyalar/<int:campaign_id>/kural", methods=["POST"])
+def admin_campaigns_rule(campaign_id):
+    if not session.get("is_admin"):
+        return redirect(url_for("admin_login"))
+    campaign = Campaign.query.get_or_404(campaign_id)
+
+    def parse_dt(field):
+        value = request.form.get(field)
+        if not value:
+            return None
+        try:
+            return datetime.strptime(value, "%Y-%m-%dT%H:%M")
+        except ValueError:
+            return None
+
+    campaign.start_at = parse_dt("start_at")
+    campaign.end_at = parse_dt("end_at")
+    campaign.rule_type = request.form.get("rule_type") or ""
+
+    params = {
+        "category": (request.form.get("category") or "").strip(),
+        "threshold": request.form.get("threshold") or "",
+        "free_product_id": request.form.get("free_product_id") or "",
+        "payment_method": request.form.get("payment_method") or "",
+        "days": (request.form.get("days") or "").strip(),
+        "start_time": request.form.get("start_time") or "",
+        "end_time": request.form.get("end_time") or "",
+        "percent": request.form.get("percent") or "",
+        "discount_amount": request.form.get("discount_amount") or "",
+    }
+    # Boş alanları saklamıyoruz, sayısal alanları int'e çeviriyoruz.
+    cleaned = {}
+    for key, value in params.items():
+        if value == "":
+            continue
+        if key in ("threshold", "free_product_id", "percent", "discount_amount"):
+            try:
+                cleaned[key] = int(value)
+            except ValueError:
+                continue
+        else:
+            cleaned[key] = value
+    campaign.rule_params = json.dumps(cleaned, ensure_ascii=False)
+
+    db.session.commit()
+    flash("Kampanya kuralı güncellendi." if campaign.rule_type else "Kural kaldırıldı, kampanya artık sadece bilgilendirme amaçlı.")
     return redirect(url_for("admin_campaigns"))
 
 

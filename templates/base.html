@@ -25,6 +25,11 @@
       <a href="{{ url_for('campaigns') }}"{% if active == 'campaigns' %} class="active"{% endif %}>Kampanyalar</a>
       <a href="{{ url_for('about') }}"{% if active == 'about' %} class="active"{% endif %}>Biz Kimiz?</a>
       <a href="{{ url_for('contact') }}"{% if active == 'contact' %} class="active"{% endif %}>İletişim</a>
+      {% if current_customer %}
+      <a href="{{ url_for('account') }}"{% if active == 'account' %} class="active"{% endif %}>Hesabım</a>
+      {% else %}
+      <a href="{{ url_for('customer_login') }}"{% if active == 'account' %} class="active"{% endif %}>Giriş Yap</a>
+      {% endif %}
     </nav>
     <div class="header-actions">
       <a class="call-now-button" href="tel:+905300490432" aria-label="Hemen ara">

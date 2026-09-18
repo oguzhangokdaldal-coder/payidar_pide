@@ -12,13 +12,16 @@
     {% else %}🌙 Şu an kapalıyız. Çalışma saatlerimiz: {{ opening_str }}–{{ closing_str }}. Lütfen açılış saatinde tekrar dene.{% endif %}
   </p>
   {% endif %}
+  {% if not current_customer %}
+  <p class="guest-banner">👤 Hesabınla giriş yaparsan bilgilerin otomatik dolar, siparişlerini takip edebilirsin. <a href="{{ url_for('customer_login', next=url_for('checkout')) }}">Giriş yap</a> veya <a href="{{ url_for('customer_register') }}">kayıt ol</a> — istersen misafir olarak da devam edebilirsin.</p>
+  {% endif %}
   <div class="checkout-grid">
     <form class="checkout-form" id="checkoutForm" novalidate data-shop-open="{{ 'true' if shop_open else 'false' }}">
       <label>Ad Soyad
-        <input type="text" name="customer_name" required autocomplete="name">
+        <input type="text" name="customer_name" required autocomplete="name" value="{{ current_customer.name if current_customer else '' }}">
       </label>
       <label>Telefon
-        <input type="tel" name="phone" required autocomplete="tel" placeholder="05xx xxx xx xx">
+        <input type="tel" name="phone" required autocomplete="tel" placeholder="05xx xxx xx xx" value="{{ current_customer.phone if current_customer else '' }}">
       </label>
 
       <fieldset class="payment-methods">
@@ -46,7 +49,7 @@
           <small id="minOrderNote"></small>
         </label>
         <label>Teslimat Adresi
-          <textarea name="address" id="addressField" required rows="3" autocomplete="street-address" placeholder="Mahalle, cadde/sokak, kapı no, kat/daire"></textarea>
+          <textarea name="address" id="addressField" required rows="3" autocomplete="street-address" placeholder="Mahalle, cadde/sokak, kapı no, kat/daire">{{ current_customer.address if current_customer else '' }}</textarea>
         </label>
       </div>
 

@@ -14,19 +14,13 @@
     {% with messages = get_flashed_messages() %}
       {% if messages %}<p class="admin-flash">{{ messages[0] }}</p>{% endif %}
     {% endwith %}
-    <p class="admin-settings-hint">Bu kampanyalar hem /kampanyalar sayfasında kart olarak, hem de üstteki kayan bantta 🎉 ile gösterilir. "Sıra" küçük olan önce çıkar.</p>
+    <p class="admin-settings-hint">Bu kampanyalar hem /kampanyalar sayfasında kart olarak, hem de üstteki kayan bantta 🎉 ile gösterilir. "Sıra" küçük olan önce çıkar. Her kampanyanın altındaki "Kural ve tarih" bölümünden, kartta yazan sözü sipariş sırasında gerçekten uygulanacak bir kurala bağlayabilirsin — bağlamazsan kart sadece bilgilendirme amaçlı kalır.</p>
 
-    <div class="admin-menu-table">
-      <div class="admin-menu-row admin-menu-row-head">
-        <span class="col-tag">Etiket</span>
-        <span class="col-name">Başlık</span>
-        <span class="col-desc">Açıklama</span>
-        <span class="col-order">Sıra</span>
-        <span class="col-actions"></span>
-      </div>
-      {% for c in campaigns %}
+    {% for c in campaigns %}
+    {% set params = campaign_params(c) %}
+    <div class="campaign-block">
       <form method="post" action="{{ url_for('admin_campaigns_edit', campaign_id=c.id) }}" class="admin-menu-row">
-        <input type="text" name="label" value="{{ c.label }}" class="col-tag">
+        <input type="text" name="label" value="{{ c.label }}" class="col-tag" placeholder="ETİKET">
         <input type="text" name="title" value="{{ c.title }}" class="col-name" required>
         <input type="text" name="description" value="{{ c.description }}" class="col-desc">
         <input type="number" name="sort_order" value="{{ c.sort_order }}" class="col-order">
@@ -35,7 +29,80 @@
           <button type="submit" formaction="{{ url_for('admin_campaigns_delete', campaign_id=c.id) }}" class="status-btn status-btn-cancel" onclick="return confirm('Bu kampanya silinsin mi?');">Sil</button>
         </span>
       </form>
-      {% endfor %}
+
+      <details class="campaign-rule-editor"{% if c.rule_type %} open{% endif %}>
+        <summary>Kural ve tarih {% if c.rule_type %}— <strong>{{ rule_labels.get(c.rule_type, c.rule_type) }}</strong> aktif{% else %}(şu an sadece bilgilendirme){% endif %}</summary>
+        <form method="post" action="{{ url_for('admin_campaigns_rule', campaign_id=c.id) }}" class="admin-rule-form">
+          <div class="admin-settings-row">
+            <label>Başlangıç tarihi/saati <small>(boş: sınırsız)</small>
+              <input type="datetime-local" name="start_at" value="{{ c.start_at.strftime('%Y-%m-%dT%H:%M') if c.start_at else '' }}">
+            </label>
+            <label>Bitiş tarihi/saati <small>(boş: sınırsız)</small>
+              <input type="datetime-local" name="end_at" value="{{ c.end_at.strftime('%Y-%m-%dT%H:%M') if c.end_at else '' }}">
+            </label>
+          </div>
+
+          <label>Kural türü
+            <select name="rule_type">
+              {% for key, rule_label in rule_labels.items() %}
+              <option value="{{ key }}"{% if c.rule_type == key %} selected{% endif %}>{{ rule_label }}</option>
+              {% endfor %}
+            </select>
+          </label>
+
+          <p class="admin-settings-hint">Aşağıdaki alanlardan sadece seçtiğin kural türüyle ilgili olanlar kullanılır, diğerleri boş kalabilir.</p>
+          <div class="admin-settings-row">
+            <label>Kategori <small>(hediye/yüzde indirim için — pide, izgara, durum, icecek)</small>
+              <input type="text" name="category" value="{{ params.category or '' }}" placeholder="pide">
+            </label>
+            <label>Eşik <small>(hediye: adet · sepet indirimi: ₺ tutar)</small>
+              <input type="number" name="threshold" value="{{ params.threshold or '' }}" placeholder="2">
+            </label>
+          </div>
+          <div class="admin-settings-row">
+            <label>Hediye ürün <small>(hediye kuralları için)</small>
+              <select name="free_product_id">
+                <option value="">—</option>
+                {% for p in all_products %}
+                <option value="{{ p.id }}"{% if params.free_product_id == p.id %} selected{% endif %}>{{ p.category }} · {{ p.name }}</option>
+                {% endfor %}
+              </select>
+            </label>
+            <label>Ödeme yöntemi <small>(ödeme hediyesi için)</small>
+              <select name="payment_method">
+                <option value="">—</option>
+                <option value="kapida"{% if params.payment_method == 'kapida' %} selected{% endif %}>Kapıda ödeme</option>
+                <option value="online"{% if params.payment_method == 'online' %} selected{% endif %}>Online ödeme</option>
+              </select>
+            </label>
+          </div>
+          <div class="admin-settings-row">
+            <label>Günler <small>(yüzde indirim — mon,tue,wed,thu,fri,sat,sun; boş: her gün)</small>
+              <input type="text" name="days" value="{{ params.days or '' }}" placeholder="mon,tue,wed,thu,fri">
+            </label>
+            <label>Saat aralığı <small>(yüzde indirim)</small>
+              <span class="time-range">
+                <input type="time" name="start_time" value="{{ params.start_time or '' }}">
+                <input type="time" name="end_time" value="{{ params.end_time or '' }}">
+              </span>
+            </label>
+          </div>
+          <div class="admin-settings-row">
+            <label>Yüzde indirim <small>(%)</small>
+              <input type="number" name="percent" value="{{ params.percent or '' }}" placeholder="15">
+            </label>
+            <label>Sabit indirim tutarı <small>(₺ — sepet tutarı eşiği kuralı için)</small>
+              <input type="number" name="discount_amount" value="{{ params.discount_amount or '' }}" placeholder="100">
+            </label>
+          </div>
+          <button type="submit" class="status-btn status-btn-primary">Kuralı kaydet</button>
+        </form>
+      </details>
+    </div>
+    {% endfor %}
+
+    <div class="campaign-block">
+      <h3>Yeni kampanya ekle</h3>
       <form method="post" action="{{ url_for('admin_campaigns_add') }}" class="admin-menu-row">
         <input type="text" name="label" placeholder="ETİKET" class="col-tag">
         <input type="text" name="title" placeholder="Kampanya başlığı" class="col-name" required>
@@ -43,6 +110,7 @@
         <input type="number" name="sort_order" placeholder="0" class="col-order">
         <span class="col-actions"><button type="submit" class="status-btn status-btn-primary">Ekle</button></span>
       </form>
+      <p class="admin-settings-hint">Ekledikten sonra kural/tarih ayarlamak için listede belirecek.</p>
     </div>
   </main>
 </body>

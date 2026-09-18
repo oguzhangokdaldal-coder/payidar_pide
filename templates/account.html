@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Hesabım | Payidar Pide{% endblock %}
+{% block content %}
+<section class="checkout-section" id="hesabim">
+  <div class="section-heading">
+    <div><p class="eyebrow">Merhaba {{ customer.name.split(' ')[0] }}</p><h2>Hesabım<br><em>ve siparişlerim.</em></h2></div>
+    <a class="text-link" href="{{ url_for('customer_logout') }}">Çıkış yap</a>
+  </div>
+
+  <div class="checkout-grid">
+    <form class="checkout-form" method="post" novalidate>
+      <h3 class="account-form-title">Bilgilerim</h3>
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}<p class="form-error">{{ messages[0] }}</p>{% endif %}
+      {% endwith %}
+      <label>Ad Soyad
+        <input type="text" name="name" required value="{{ customer.name }}">
+      </label>
+      <label>E-posta
+        <input type="email" value="{{ customer.email }}" disabled>
+      </label>
+      <label>Telefon
+        <input type="tel" name="phone" placeholder="05xx xxx xx xx" value="{{ customer.phone }}">
+      </label>
+      <label>Kayıtlı adres <small>(sipariş verirken otomatik dolar)</small>
+        <textarea name="address" rows="3">{{ customer.address }}</textarea>
+      </label>
+      <button class="primary-button" type="submit">Kaydet <span>→</span></button>
+    </form>
+
+    <aside class="order-summary account-orders" aria-label="Geçmiş siparişlerim">
+      <h3>Siparişlerim <small>({{ orders|length }})</small></h3>
+      {% if not orders %}
+      <p class="summary-empty">Henüz siparişin yok. <a href="{{ url_for('menu') }}">Menüye göz at →</a></p>
+      {% else %}
+      {% for order in orders %}
+      <div class="account-order-card">
+        <div class="account-order-head">
+          <strong>#{{ order.id }}</strong>
+          <span class="order-status-badge status-{{ order.status }}">{{ status_labels.get(order.status, order.status) }}</span>
+        </div>
+        <p class="account-order-meta">{{ order.created_at.strftime('%d.%m.%Y %H:%M') }} · {{ '%.2f'|format(order.total_price_tl) }}₺</p>
+        <ul class="account-order-items">
+          {% for item in order.items %}
+          <li>{{ item.quantity }}× {{ item.product_name }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endfor %}
+      {% endif %}
+    </aside>
+  </div>
+</section>
+{% endblock %}

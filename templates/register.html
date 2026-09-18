@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Kayıt Ol | Payidar Pide{% endblock %}
+{% block content %}
+<section class="checkout-section" id="kayit">
+  <div class="section-heading">
+    <div><p class="eyebrow">Hesap oluştur</p><h2>Kayıt<br><em>ol.</em></h2></div>
+    <p class="section-intro">Bilgilerin kaydolsun, bir dahaki sipariş bir tık — ve geçmiş siparişlerini buradan takip et.</p>
+  </div>
+  <div class="auth-form-wrap">
+    <form class="checkout-form" method="post" novalidate>
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}<p class="form-error">{{ messages[0] }}</p>{% endif %}
+      {% endwith %}
+      <label>Ad Soyad
+        <input type="text" name="name" required autocomplete="name" value="{{ request.form.get('name', '') }}">
+      </label>
+      <label>E-posta
+        <input type="email" name="email" required autocomplete="email" value="{{ request.form.get('email', '') }}">
+      </label>
+      <label>Telefon <small>(opsiyonel)</small>
+        <input type="tel" name="phone" autocomplete="tel" placeholder="05xx xxx xx xx" value="{{ request.form.get('phone', '') }}">
+      </label>
+      <label>Şifre
+        <input type="password" name="password" required minlength="6" autocomplete="new-password">
+      </label>
+      <button class="primary-button" type="submit">Kayıt ol <span>→</span></button>
+      <p class="section-intro">Zaten hesabın var mı? <a class="text-link" href="{{ url_for('customer_login') }}">Giriş yap</a></p>
+    </form>
+  </div>
+</section>
+{% endblock %}
