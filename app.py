@@ -11,7 +11,7 @@ from flask import Flask, flash, jsonify, redirect, render_template, request, ses
 
 import paytr
 import webhooks
-from models import Order, OrderItem, db
+from models import Order, OrderItem, Setting, db
 
 # .env'in yolunu açıkça belirtiyoruz (app.py ile aynı klasörde) — bazı WSGI
 # ortamlarında load_dotenv()'in parametresiz haliyle dosyayı otomatik bulması
@@ -37,8 +37,10 @@ app.config["WHATSAPP_WEBHOOK_SECRET"] = os.environ.get("WHATSAPP_WEBHOOK_SECRET"
 
 ORDER_RATE_LIMIT_WINDOW_MIN = 15
 
-# Çalışma saatleri: .env'de OPENING_TIME / CLOSING_TIME ("SA:DK") ile elle
-# değiştirilebilir, ayarlanmamışsa 10:00–22:00 varsayılan kullanılır.
+# Çalışma saatleri: varsayılan olarak .env'deki OPENING_TIME / CLOSING_TIME
+# ("SA:DK") kullanılır, ayarlanmamışsa 10:00–22:00. Yönetim panelinden
+# (/admin/ayarlar) kaydedilen değer varsa .env'dekini geçersiz kılar — bu
+# sayede saatler kod/sunucu değişikliği gerekmeden panelden güncellenebilir.
 TR_TZ = ZoneInfo("Europe/Istanbul")
 
 
@@ -50,17 +52,39 @@ def _parse_hhmm(value, fallback):
         return fallback
 
 
-OPENING_TIME = _parse_hhmm(os.environ.get("OPENING_TIME"), dtime(10, 0))
-CLOSING_TIME = _parse_hhmm(os.environ.get("CLOSING_TIME"), dtime(22, 0))
+DEFAULT_OPENING_TIME = _parse_hhmm(os.environ.get("OPENING_TIME"), dtime(10, 0))
+DEFAULT_CLOSING_TIME = _parse_hhmm(os.environ.get("CLOSING_TIME"), dtime(22, 0))
+
+
+def get_setting(key, default=None):
+    row = Setting.query.get(key)
+    return row.value if row else default
+
+
+def set_setting(key, value):
+    row = Setting.query.get(key)
+    if row:
+        row.value = value
+    else:
+        row = Setting(key=key, value=value)
+        db.session.add(row)
+    db.session.commit()
+
+
+def get_working_hours():
+    opening = _parse_hhmm(get_setting("opening_time"), DEFAULT_OPENING_TIME)
+    closing = _parse_hhmm(get_setting("closing_time"), DEFAULT_CLOSING_TIME)
+    return opening, closing
 
 
 def is_shop_open(now=None):
     """Şu an (Türkiye saatiyle) çalışma saatleri içinde miyiz?"""
+    opening, closing = get_working_hours()
     current = (now or datetime.now(TR_TZ)).time()
-    if OPENING_TIME <= CLOSING_TIME:
-        return OPENING_TIME <= current < CLOSING_TIME
+    if opening <= closing:
+        return opening <= current < closing
     # Gece yarısını geçen çalışma saatleri (örn. 18:00–02:00) için.
-    return current >= OPENING_TIME or current < CLOSING_TIME
+    return current >= opening or current < closing
 
 # Sipariş durum akışı: her durumdan hangi durumlara geçilebileceği.
 # "onay_bekliyor" -> alındı ya da iptal; alındı -> hazırlanıyor ya da iptal; ...
@@ -138,16 +162,15 @@ CAMPAIGNS = [
     {"label": "NAKİT ÖDEMEDE HEDİYE", "title": "Nakit Ödemede Küçük Ayran Hediye", "description": "Siparişini kapıda nakit ödeyene küçük boy yayık ayran bizden."},
 ]
 
-TOPLINE_INFO = [
-    "🔥 Bugün fırından çıkanlar",
-    f"🕐 {OPENING_TIME:%H:%M} — {CLOSING_TIME:%H:%M} açığız",
-    "📍 Çünür, Isparta",
-]
-
-
 @app.context_processor
 def inject_topline():
-    messages = [{"text": t, "url": None} for t in TOPLINE_INFO]
+    opening, closing = get_working_hours()
+    topline_info = [
+        "🔥 Bugün fırından çıkanlar",
+        f"🕐 {opening:%H:%M} — {closing:%H:%M} açığız",
+        "📍 Çünür, Isparta",
+    ]
+    messages = [{"text": t, "url": None} for t in topline_info]
     messages += [
         {"text": f"🎉 {c['title']}", "url": url_for("campaigns") + f"#campaign-{i}"}
         for i, c in enumerate(CAMPAIGNS)
@@ -187,22 +210,24 @@ def contact():
 
 @app.route("/siparis")
 def checkout():
+    opening, closing = get_working_hours()
     return render_template(
         "checkout.html",
         active="checkout",
         paytr_enabled=bool(app.config["PAYTR_MERCHANT_ID"]),
         delivery_zones=DELIVERY_ZONES,
         shop_open=is_shop_open(),
-        opening_str=f"{OPENING_TIME:%H:%M}",
-        closing_str=f"{CLOSING_TIME:%H:%M}",
+        opening_str=f"{opening:%H:%M}",
+        closing_str=f"{closing:%H:%M}",
     )
 
 
 @app.route("/siparis/olustur", methods=["POST"])
 def create_order():
     if not is_shop_open():
+        opening, closing = get_working_hours()
         return jsonify(
-            error=f"Şu an sipariş kabul edemiyoruz. Çalışma saatlerimiz: {OPENING_TIME:%H:%M}–{CLOSING_TIME:%H:%M}."
+            error=f"Şu an sipariş kabul edemiyoruz. Çalışma saatlerimiz: {opening:%H:%M}–{closing:%H:%M}."
         ), 400
 
     data = request.get_json(silent=True) or {}
@@ -438,8 +463,37 @@ def admin_update_order_status(order_id):
         order.status = new_status
         if new_status == "alindi":
             order.confirmed_at = datetime.utcnow()
+        if new_status == "iptal":
+            reason = (request.form.get("sebep") or "").strip()
+            order.cancel_reason = reason or "Sebep belirtilmedi"
+            # Şu an bu webhook'u dinleyen bir WhatsApp botu yok — WHATSAPP_WEBHOOK_URL
+            # ayarlanmamışsa sessizce atlanır, siparişi iptal etmeyi engellemez.
+            webhooks.send_order_cancellation_notice(app.config, order, order.cancel_reason)
         db.session.commit()
     return redirect(url_for("admin_orders"))
+
+
+@app.route("/admin/ayarlar", methods=["GET", "POST"])
+def admin_settings():
+    if not session.get("is_admin"):
+        return redirect(url_for("admin_login"))
+    if request.method == "POST":
+        opening = _parse_hhmm(request.form.get("opening_time"), None)
+        closing = _parse_hhmm(request.form.get("closing_time"), None)
+        if not opening or not closing:
+            flash("Geçersiz saat formatı.")
+        else:
+            set_setting("opening_time", f"{opening:%H:%M}")
+            set_setting("closing_time", f"{closing:%H:%M}")
+            flash("Çalışma saatleri güncellendi.")
+        return redirect(url_for("admin_settings"))
+
+    opening, closing = get_working_hours()
+    return render_template(
+        "admin_settings.html",
+        opening_str=f"{opening:%H:%M}",
+        closing_str=f"{closing:%H:%M}",
+    )
 
 
 if __name__ == "__main__":

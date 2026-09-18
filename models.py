@@ -25,6 +25,7 @@ class Order(db.Model):
 
     confirmation_code = db.Column(db.String(10), nullable=True)
     confirmed_at = db.Column(db.DateTime, nullable=True)
+    cancel_reason = db.Column(db.String(300), nullable=True)  # yalnızca iptal edilen siparişlerde dolu
 
     total_price = db.Column(db.Integer, nullable=False)  # kuruş cinsinden (PayTR ile uyumlu)
     merchant_oid = db.Column(db.String(64), unique=True, nullable=True)
@@ -50,3 +51,13 @@ class OrderItem(db.Model):
     @property
     def line_total_tl(self):
         return (self.unit_price * self.quantity) / 100
+
+
+class Setting(db.Model):
+    """Yönetim panelinden değiştirilebilen basit anahtar/değer ayarları
+    (örn. çalışma saatleri). .env'deki değerler yalnızca ilk/varsayılan
+    değer olarak kullanılır, buradaki kayıt varsa onu geçersiz kılar."""
+    __tablename__ = "settings"
+
+    key = db.Column(db.String(50), primary_key=True)
+    value = db.Column(db.String(200), nullable=False)

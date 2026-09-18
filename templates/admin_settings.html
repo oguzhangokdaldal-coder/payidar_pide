@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ayarlar | Payidar Yönetim</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}" />
+</head>
+<body class="admin-body">
+  <header class="admin-header">
+    <h1>Payidar <span>Yönetim</span></h1>
+    <div class="admin-header-links">
+      <a href="{{ url_for('admin_orders') }}">Siparişler</a>
+      <a href="{{ url_for('admin_logout') }}">Çıkış yap</a>
+    </div>
+  </header>
+  <main class="admin-main">
+    <h2>Ayarlar</h2>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}<p class="admin-flash">{{ messages[0] }}</p>{% endif %}
+    {% endwith %}
+    <form class="admin-settings-form" method="post">
+      <h3>Çalışma saatleri</h3>
+      <p class="admin-settings-hint">Bu saatlerin dışında sitede sipariş kabul edilmez, checkout sayfasında "kapalıyız" yazısı çıkar.</p>
+      <div class="admin-settings-row">
+        <label>Açılış
+          <input type="time" name="opening_time" value="{{ opening_str }}" required>
+        </label>
+        <label>Kapanış
+          <input type="time" name="closing_time" value="{{ closing_str }}" required>
+        </label>
+      </div>
+      <button type="submit">Kaydet</button>
+    </form>
+  </main>
+</body>
+</html>

@@ -9,7 +9,10 @@
 <body class="admin-body">
   <header class="admin-header">
     <h1>Payidar <span>Yönetim</span></h1>
-    <a href="{{ url_for('admin_logout') }}">Çıkış yap</a>
+    <div class="admin-header-links">
+      <a href="{{ url_for('admin_settings') }}">Ayarlar</a>
+      <a href="{{ url_for('admin_logout') }}">Çıkış yap</a>
+    </div>
   </header>
   <main class="admin-main admin-main-board">
     <h2>Siparişler <small>({{ total_count }})</small></h2>
@@ -41,6 +44,7 @@
             </p>
             {% if order.order_type != 'gel_al' %}<p class="admin-order-address">{{ order.address }}</p>{% endif %}
             {% if order.note %}<p class="admin-order-note">Not: {{ order.note }}</p>{% endif %}
+            {% if order.status == 'iptal' and order.cancel_reason %}<p class="admin-order-cancel-reason">İptal sebebi: {{ order.cancel_reason }}</p>{% endif %}
             <ul class="admin-order-items">
               {% for item in order.items %}
               <li>{{ item.quantity }}× {{ item.product_name }} — {{ '%.2f'|format(item.line_total_tl) }}₺</li>
@@ -53,8 +57,9 @@
               {% endif %}
               {% for next_status in status_transitions.get(order.status, []) %}
                 {% if next_status == 'iptal' %}
-                <form method="post" action="{{ url_for('admin_update_order_status', order_id=order.id) }}" onsubmit="return confirm('Bu siparişi iptal etmek istediğine emin misin?');">
+                <form method="post" action="{{ url_for('admin_update_order_status', order_id=order.id) }}" class="cancel-form" onsubmit="return handleCancelSubmit(this);">
                   <input type="hidden" name="durum" value="iptal">
+                  <input type="hidden" name="sebep" value="">
                   <button type="submit" class="status-btn status-btn-cancel">İptal et</button>
                 </form>
                 {% elif order.status == 'onay_bekliyor' %}
@@ -78,5 +83,13 @@
     </div>
     {% endif %}
   </main>
+  <script>
+    function handleCancelSubmit(form) {
+      const reason = prompt('İptal sebebini yaz (örn. ürün tükendi, müşteri vazgeçti):', '');
+      if (reason === null) return false;
+      form.querySelector('input[name="sebep"]').value = reason;
+      return confirm('Bu siparişi iptal etmek istediğine emin misin?');
+    }
+  </script>
 </body>
 </html>
