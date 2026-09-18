@@ -6,17 +6,47 @@
     <div><p class="eyebrow">Son adım</p><h2>Siparişi<br><em>tamamla.</em></h2></div>
     <p class="section-intro">Bilgilerini bırak, ödeme yöntemini seç, sofran hazırlansın.</p>
   </div>
+  {% if not shop_open %}
+  <p class="closed-banner">🌙 Şu an kapalıyız. Çalışma saatlerimiz: {{ opening_str }}–{{ closing_str }}. Lütfen açılış saatinde tekrar dene.</p>
+  {% endif %}
   <div class="checkout-grid">
-    <form class="checkout-form" id="checkoutForm" novalidate>
+    <form class="checkout-form" id="checkoutForm" novalidate data-shop-open="{{ 'true' if shop_open else 'false' }}">
       <label>Ad Soyad
         <input type="text" name="customer_name" required autocomplete="name">
       </label>
       <label>Telefon
         <input type="tel" name="phone" required autocomplete="tel" placeholder="05xx xxx xx xx">
       </label>
-      <label>Teslimat Adresi
-        <textarea name="address" required rows="3" autocomplete="street-address"></textarea>
-      </label>
+
+      <fieldset class="payment-methods">
+        <legend>Sipariş türü</legend>
+        <label class="payment-option">
+          <input type="radio" name="order_type" value="teslimat" id="orderTypeDelivery" checked>
+          <span><strong>Adrese Teslimat</strong><small>Mahallene göre minimum sepet tutarı uygulanır</small></span>
+        </label>
+        <label class="payment-option">
+          <input type="radio" name="order_type" value="gel_al" id="orderTypePickup">
+          <span><strong>Gel Al</strong><small>Mağazamızdan kendin teslim alırsın, minimum tutar yok</small></span>
+        </label>
+      </fieldset>
+
+      <div id="deliveryFields">
+        <label>Mahalle
+          <div class="neighborhood-row">
+            <select name="neighborhood" id="neighborhoodSelect">
+              {% for zone in delivery_zones %}
+              <option value="{{ zone.slug }}" data-min="{{ zone.min_order }}" data-lat="{{ zone.lat }}" data-lng="{{ zone.lng }}">{{ zone.name }} — min. {{ zone.min_order }}₺</option>
+              {% endfor %}
+            </select>
+            <button type="button" id="useLocationBtn" class="location-btn">📍 Konumumu kullan</button>
+          </div>
+          <small id="minOrderNote"></small>
+        </label>
+        <label>Teslimat Adresi
+          <textarea name="address" id="addressField" required rows="3" autocomplete="street-address" placeholder="Mahalle, cadde/sokak, kapı no, kat/daire"></textarea>
+        </label>
+      </div>
+
       <label>Sipariş Notu <small>(opsiyonel)</small>
         <textarea name="note" rows="2" placeholder="Zili çalmayın, kapıya bırakın vb."></textarea>
       </label>
@@ -34,7 +64,7 @@
       </fieldset>
 
       <p class="form-error" id="formError" hidden></p>
-      <button class="primary-button" type="submit" id="submitOrder">Siparişi onayla <span>→</span></button>
+      <button class="primary-button" type="submit" id="submitOrder"{% if not shop_open %} disabled{% endif %}>{% if shop_open %}Siparişi onayla <span>→</span>{% else %}Şu an kapalıyız{% endif %}</button>
     </form>
 
     <aside class="order-summary" id="orderSummary" aria-label="Sipariş özeti"></aside>

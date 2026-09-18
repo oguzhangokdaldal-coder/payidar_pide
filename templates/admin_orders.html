@@ -11,64 +11,69 @@
     <h1>Payidar <span>Yönetim</span></h1>
     <a href="{{ url_for('admin_logout') }}">Çıkış yap</a>
   </header>
-  <main class="admin-main">
-    <h2>Siparişler <small>({{ orders|length }})</small></h2>
-    {% if not orders %}
+  <main class="admin-main admin-main-board">
+    <h2>Siparişler <small>({{ total_count }})</small></h2>
+    {% if not total_count %}
       <p class="admin-empty">Henüz sipariş yok.</p>
     {% else %}
-    {% set flow = ["alindi", "hazirlaniyor", "yolda", "teslim_edildi"] %}
-    <div class="admin-orders">
-      {% for order in orders %}
-      <article class="admin-order-card{% if order.status == 'iptal' %} is-cancelled{% endif %}">
-        <div class="admin-order-head">
-          <strong>#{{ order.id }} — {{ order.customer_name }}</strong>
-          <span class="admin-badge status-{{ order.status }}">{{ status_labels.get(order.status, order.status) }}</span>
-          <span class="admin-badge pay-{{ order.payment_status }}">{{ order.payment_method }} · {{ order.payment_status }}</span>
+    <div class="order-board">
+      {% for status in columns %}
+      <div class="order-column">
+        <div class="order-column-head">
+          <span class="admin-badge status-{{ status }}">{{ status_labels.get(status, status) }}</span>
+          <small>{{ orders_by_status[status]|length }}</small>
         </div>
-        <p class="admin-order-meta">{{ order.created_at.strftime('%d.%m.%Y %H:%M') }} · <a href="tel:{{ order.phone|replace(' ', '') }}">{{ order.phone }}</a> · {{ order.address }}</p>
-        {% if order.note %}<p class="admin-order-note">Not: {{ order.note }}</p>{% endif %}
-        <ul class="admin-order-items">
-          {% for item in order.items %}
-          <li>{{ item.quantity }}× {{ item.product_name }} — {{ '%.2f'|format(item.line_total_tl) }}₺</li>
-          {% endfor %}
-        </ul>
-
-        {% if order.status in flow %}
-        {% set current_idx = flow.index(order.status) %}
-        <ol class="order-stepper">
-          {% for step_key in flow %}
-          <li class="order-step{% if loop.index0 <= current_idx %} done{% endif %}{% if loop.index0 == current_idx %} current{% endif %}">{{ status_labels[step_key] }}</li>
-          {% endfor %}
-        </ol>
-        {% endif %}
-
-        <div class="admin-order-bottom">
-          <div class="admin-order-total">Toplam: <strong>{{ '%.2f'|format(order.total_price_tl) }}₺</strong></div>
-          <div class="admin-order-actions">
-            {% if order.status == 'onay_bekliyor' %}
-            <span class="admin-confirm-code">Kod: {{ order.confirmation_code }}</span>
-            {% endif %}
-            {% for next_status in status_transitions.get(order.status, []) %}
-              {% if next_status == 'iptal' %}
-              <form method="post" action="{{ url_for('admin_update_order_status', order_id=order.id) }}" class="admin-status-form" onsubmit="return confirm('Bu siparişi iptal etmek istediğine emin misin?');">
-                <input type="hidden" name="durum" value="iptal">
-                <button type="submit" class="status-btn status-btn-cancel">İptal et</button>
-              </form>
-              {% elif order.status == 'onay_bekliyor' %}
-              <form method="post" action="{{ url_for('admin_update_order_status', order_id=order.id) }}" class="admin-status-form">
-                <input type="hidden" name="durum" value="{{ next_status }}">
-                <button type="submit" class="status-btn status-btn-primary">Telefonla onayladım, sipariş kabul edilsin</button>
-              </form>
-              {% else %}
-              <form method="post" action="{{ url_for('admin_update_order_status', order_id=order.id) }}" class="admin-status-form">
-                <input type="hidden" name="durum" value="{{ next_status }}">
-                <button type="submit" class="status-btn status-btn-primary">{{ status_labels[next_status] }} olarak işaretle</button>
-              </form>
+        <div class="order-column-body">
+          {% if not orders_by_status[status] %}
+          <p class="order-column-empty">—</p>
+          {% endif %}
+          {% for order in orders_by_status[status] %}
+          <article class="admin-order-card{% if order.status == 'iptal' %} is-cancelled{% endif %}">
+            <div class="admin-order-head">
+              <strong>#{{ order.id }} — {{ order.customer_name }}</strong>
+              <span class="admin-badge pay-{{ order.payment_status }}">{{ order.payment_method }} · {{ order.payment_status }}</span>
+            </div>
+            <p class="admin-order-meta">
+              {{ order.created_at.strftime('%d.%m.%Y %H:%M') }} · <a href="tel:{{ order.phone|replace(' ', '') }}">{{ order.phone }}</a>
+            </p>
+            <p class="admin-order-type">
+              {% if order.order_type == 'gel_al' %}🏪 Gel Al{% else %}🛵 Teslimat{% if order.neighborhood %} · {{ zone_names.get(order.neighborhood, order.neighborhood) }}{% endif %}{% endif %}
+            </p>
+            {% if order.order_type != 'gel_al' %}<p class="admin-order-address">{{ order.address }}</p>{% endif %}
+            {% if order.note %}<p class="admin-order-note">Not: {{ order.note }}</p>{% endif %}
+            <ul class="admin-order-items">
+              {% for item in order.items %}
+              <li>{{ item.quantity }}× {{ item.product_name }} — {{ '%.2f'|format(item.line_total_tl) }}₺</li>
+              {% endfor %}
+            </ul>
+            <div class="admin-order-total">Toplam: <strong>{{ '%.2f'|format(order.total_price_tl) }}₺</strong></div>
+            <div class="admin-order-actions">
+              {% if order.status == 'onay_bekliyor' %}
+              <span class="admin-confirm-code">Kod: {{ order.confirmation_code }}</span>
               {% endif %}
-            {% endfor %}
-          </div>
+              {% for next_status in status_transitions.get(order.status, []) %}
+                {% if next_status == 'iptal' %}
+                <form method="post" action="{{ url_for('admin_update_order_status', order_id=order.id) }}" onsubmit="return confirm('Bu siparişi iptal etmek istediğine emin misin?');">
+                  <input type="hidden" name="durum" value="iptal">
+                  <button type="submit" class="status-btn status-btn-cancel">İptal et</button>
+                </form>
+                {% elif order.status == 'onay_bekliyor' %}
+                <form method="post" action="{{ url_for('admin_update_order_status', order_id=order.id) }}">
+                  <input type="hidden" name="durum" value="{{ next_status }}">
+                  <button type="submit" class="status-btn status-btn-primary">Onayla, kabul et</button>
+                </form>
+                {% else %}
+                <form method="post" action="{{ url_for('admin_update_order_status', order_id=order.id) }}">
+                  <input type="hidden" name="durum" value="{{ next_status }}">
+                  <button type="submit" class="status-btn status-btn-primary">{{ status_labels[next_status] }} →</button>
+                </form>
+                {% endif %}
+              {% endfor %}
+            </div>
+          </article>
+          {% endfor %}
         </div>
-      </article>
+      </div>
       {% endfor %}
     </div>
     {% endif %}

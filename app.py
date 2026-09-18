@@ -2,7 +2,9 @@ import hmac
 import os
 import secrets
 from datetime import datetime, timedelta
+from datetime import time as dtime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from dotenv import load_dotenv
 from flask import Flask, flash, jsonify, redirect, render_template, request, session, url_for
@@ -35,6 +37,31 @@ app.config["WHATSAPP_WEBHOOK_SECRET"] = os.environ.get("WHATSAPP_WEBHOOK_SECRET"
 
 ORDER_RATE_LIMIT_WINDOW_MIN = 15
 
+# Çalışma saatleri: .env'de OPENING_TIME / CLOSING_TIME ("SA:DK") ile elle
+# değiştirilebilir, ayarlanmamışsa 10:00–22:00 varsayılan kullanılır.
+TR_TZ = ZoneInfo("Europe/Istanbul")
+
+
+def _parse_hhmm(value, fallback):
+    try:
+        h, m = value.split(":")
+        return dtime(int(h), int(m))
+    except (ValueError, AttributeError, TypeError):
+        return fallback
+
+
+OPENING_TIME = _parse_hhmm(os.environ.get("OPENING_TIME"), dtime(10, 0))
+CLOSING_TIME = _parse_hhmm(os.environ.get("CLOSING_TIME"), dtime(22, 0))
+
+
+def is_shop_open(now=None):
+    """Şu an (Türkiye saatiyle) çalışma saatleri içinde miyiz?"""
+    current = (now or datetime.now(TR_TZ)).time()
+    if OPENING_TIME <= CLOSING_TIME:
+        return OPENING_TIME <= current < CLOSING_TIME
+    # Gece yarısını geçen çalışma saatleri (örn. 18:00–02:00) için.
+    return current >= OPENING_TIME or current < CLOSING_TIME
+
 # Sipariş durum akışı: her durumdan hangi durumlara geçilebileceği.
 # "onay_bekliyor" -> alındı ya da iptal; alındı -> hazırlanıyor ya da iptal; ...
 ORDER_STATUS_LABELS = {
@@ -53,6 +80,8 @@ ORDER_STATUS_TRANSITIONS = {
     "teslim_edildi": [],
     "iptal": [],
 }
+# Yönetim panelinde her durum kendi sütununda ayrı ayrı gösterilir, sırası bu.
+ORDER_STATUS_COLUMNS = ["onay_bekliyor", "alindi", "hazirlaniyor", "yolda", "teslim_edildi", "iptal"]
 
 db.init_app(app)
 with app.app_context():
@@ -89,6 +118,18 @@ PRODUCTS = [
 ]
 PRODUCTS_BY_ID = {item["id"]: item for item in PRODUCTS}
 
+# Teslimat yapılan mahalleler: her birinin minimum sepet tutarı (₺) ve yaklaşık
+# konumu (tarayıcı konumundan en yakın mahalleyi otomatik seçmek için).
+# checkout.html'deki <option> listesiyle senkron tutulmalı.
+DELIVERY_ZONES = [
+    {"slug": "cunur", "name": "Çünür", "min_order": 500, "lat": 37.8150, "lng": 30.5452},
+    {"slug": "mehmet-tonge", "name": "Mehmet Tönge", "min_order": 800, "lat": 37.8217, "lng": 30.5135},
+    {"slug": "akkent", "name": "Akkent", "min_order": 1100, "lat": 37.8239, "lng": 30.5776},
+    {"slug": "dogu-kampus", "name": "Doğu Kampüs", "min_order": 600, "lat": 37.8280, "lng": 30.5350},
+]
+DELIVERY_ZONES_BY_SLUG = {z["slug"]: z for z in DELIVERY_ZONES}
+PICKUP_ADDRESS_LABEL = "Gel Al — mağazadan teslim alınacak"
+
 CAMPAIGNS = [
     {"label": "İKİ AL BİR HEDİYE", "title": "2 Pide Alana 1 Ayran Hediye", "description": "Herhangi 2 pide siparişine 1 yayık ayran bizden."},
     {"label": "HAFTANIN PAYLAŞIMI", "title": "2 Pide + 1 Ayran = 490₺", "description": "Payidar Karışık veya Kuşbaşılı Pide'den ikisini seç, yanına ayranı ekleyelim."},
@@ -99,7 +140,7 @@ CAMPAIGNS = [
 
 TOPLINE_INFO = [
     "🔥 Bugün fırından çıkanlar",
-    "🕐 10:00 — 22:00 açığız",
+    f"🕐 {OPENING_TIME:%H:%M} — {CLOSING_TIME:%H:%M} açığız",
     "📍 Çünür, Isparta",
 ]
 
@@ -146,11 +187,24 @@ def contact():
 
 @app.route("/siparis")
 def checkout():
-    return render_template("checkout.html", active="checkout", paytr_enabled=bool(app.config["PAYTR_MERCHANT_ID"]))
+    return render_template(
+        "checkout.html",
+        active="checkout",
+        paytr_enabled=bool(app.config["PAYTR_MERCHANT_ID"]),
+        delivery_zones=DELIVERY_ZONES,
+        shop_open=is_shop_open(),
+        opening_str=f"{OPENING_TIME:%H:%M}",
+        closing_str=f"{CLOSING_TIME:%H:%M}",
+    )
 
 
 @app.route("/siparis/olustur", methods=["POST"])
 def create_order():
+    if not is_shop_open():
+        return jsonify(
+            error=f"Şu an sipariş kabul edemiyoruz. Çalışma saatlerimiz: {OPENING_TIME:%H:%M}–{CLOSING_TIME:%H:%M}."
+        ), 400
+
     data = request.get_json(silent=True) or {}
     items = data.get("items") or []
     customer_name = (data.get("customer_name") or "").strip()
@@ -158,9 +212,25 @@ def create_order():
     address = (data.get("address") or "").strip()
     note = (data.get("note") or "").strip()
     payment_method = data.get("payment_method")
+    order_type = data.get("order_type") or "teslimat"
+    neighborhood_slug = (data.get("neighborhood") or "").strip()
 
-    if not customer_name or not phone or not address:
-        return jsonify(error="Ad soyad, telefon ve adres zorunlu."), 400
+    if order_type not in ("teslimat", "gel_al"):
+        return jsonify(error="Geçersiz sipariş türü."), 400
+    if not customer_name or not phone:
+        return jsonify(error="Ad soyad ve telefon zorunlu."), 400
+
+    delivery_zone = None
+    if order_type == "teslimat":
+        if not address:
+            return jsonify(error="Teslimat adresi zorunlu."), 400
+        delivery_zone = DELIVERY_ZONES_BY_SLUG.get(neighborhood_slug)
+        if not delivery_zone:
+            return jsonify(error="Lütfen listeden bir mahalle seçin."), 400
+    else:
+        address = address or PICKUP_ADDRESS_LABEL
+        neighborhood_slug = ""
+
     if payment_method not in ("online", "kapida"):
         return jsonify(error="Geçersiz ödeme yöntemi."), 400
 
@@ -187,6 +257,13 @@ def create_order():
     if not order_items:
         return jsonify(error="Sepetiniz boş ya da geçersiz."), 400
 
+    if delivery_zone and total_kurus < delivery_zone["min_order"] * 100:
+        eksik_tl = delivery_zone["min_order"] - total_kurus / 100
+        return jsonify(
+            error=f"{delivery_zone['name']} için minimum sepet tutarı {delivery_zone['min_order']}₺ "
+                  f"— sepetinize {eksik_tl:.0f}₺ daha ekleyin."
+        ), 400
+
     if payment_method == "online" and not app.config["PAYTR_MERCHANT_ID"]:
         return jsonify(error="Online ödeme şu anda kullanılamıyor, kapıda ödemeyi seçin."), 503
 
@@ -206,6 +283,8 @@ def create_order():
         phone=phone,
         address=address,
         note=note,
+        order_type=order_type,
+        neighborhood=neighborhood_slug or None,
         payment_method=payment_method,
         payment_status="pending" if payment_method == "online" else "kapida_odeme",
         status="onay_bekliyor" if payment_method == "kapida" else "alindi",
@@ -334,11 +413,18 @@ def admin_orders():
     if not session.get("is_admin"):
         return redirect(url_for("admin_login"))
     orders = Order.query.order_by(Order.created_at.desc()).all()
+    orders_by_status = {status: [] for status in ORDER_STATUS_COLUMNS}
+    for order in orders:
+        orders_by_status.setdefault(order.status, []).append(order)
+    zone_names = {z["slug"]: z["name"] for z in DELIVERY_ZONES}
     return render_template(
         "admin_orders.html",
-        orders=orders,
+        columns=ORDER_STATUS_COLUMNS,
+        orders_by_status=orders_by_status,
+        total_count=len(orders),
         status_labels=ORDER_STATUS_LABELS,
         status_transitions=ORDER_STATUS_TRANSITIONS,
+        zone_names=zone_names,
     )
 
 

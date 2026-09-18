@@ -171,6 +171,7 @@ em { color: var(--tomato); font-style: normal; }
 
 /* Checkout */
 .checkout-section { max-width: 1100px; margin: auto; padding: 100px 6vw 110px; }
+.closed-banner { margin: 0 0 24px; padding: 16px 20px; background: #f8dede; color: #92251a; font-weight: 700; font-size: 14px; }
 .checkout-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 40px; align-items: start; }
 .checkout-form { background: var(--paper); padding: 32px; display: flex; flex-direction: column; gap: 18px; }
 .checkout-form label { display: flex; flex-direction: column; gap: 8px; font-size: 13px; font-weight: 700; color: var(--muted); }
@@ -185,6 +186,13 @@ em { color: var(--tomato); font-style: normal; }
 .payment-option strong { color: var(--ink); font-size: 14px; }
 .payment-option small { color: var(--muted); font-size: 12px; }
 .payment-option.disabled { opacity: .5; cursor: not-allowed; }
+.neighborhood-row { display: flex; gap: 10px; }
+.neighborhood-row select { flex: 1; padding: 13px 14px; border: 1px solid var(--line); background: #fff; font: inherit; color: var(--ink); }
+.location-btn { flex-shrink: 0; border: 1px solid var(--line); background: #fff; padding: 0 14px; font-size: 12px; font-weight: 700; color: var(--ink); white-space: nowrap; transition: border-color .2s, background .2s; }
+.location-btn:hover { border-color: var(--tomato); }
+.location-btn:disabled { opacity: .5; cursor: wait; }
+#minOrderNote { display: block; margin-top: 6px; font-weight: 400; color: var(--muted); }
+#minOrderNote.min-not-met { color: var(--tomato); font-weight: 700; }
 .form-error { color: var(--tomato); font-size: 13px; font-weight: 700; margin: 0; }
 .order-summary { background: var(--paper); padding: 28px; position: sticky; top: 110px; }
 .order-summary h3 { font-family: var(--serif); font-size: 20px; margin: 0 0 16px; }
@@ -210,6 +218,8 @@ footer { padding: 30px 6vw; background: var(--ink); color: #aaa197; display: fle
 footer .brand { color: #fff; }
 footer .brand small { color: var(--orange); }
 footer .brand-logo { height: 56px; background: #fff; padding: 5px 9px; border-radius: 8px; }
+.footer-admin-link { color: #aaa197; border-bottom: 1px solid transparent; transition: color .2s, border-color .2s; }
+.footer-admin-link:hover { color: #fff; border-color: #aaa197; }
 
 /* Cart drawer */
 .cart-overlay { position: fixed; inset: 0; background: #241b1590; z-index: 9; opacity: 0; visibility: hidden; transition: .3s; }
@@ -318,7 +328,7 @@ footer .brand-logo { height: 56px; background: #fff; padding: 5px 9px; border-ra
   .reviews-track { margin: 0; padding-left: 5vw; padding-right: 5vw; }
   .review-card { flex-basis: 240px; }
   footer { padding: 28px 5vw; gap: 15px; flex-wrap: wrap; }
-  footer span:last-child { display: none; }
+  .footer-tagline { display: none; }
   .checkout-section { padding: 60px 5vw 70px; }
   .checkout-grid { grid-template-columns: 1fr; }
   .order-summary { position: static; }

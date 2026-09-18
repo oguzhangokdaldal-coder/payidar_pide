@@ -64,6 +64,7 @@ function updateCart() {
     document.querySelector('#startShopping')?.addEventListener('click', closeCart);
   }
   saveCart();
+  document.dispatchEvent(new CustomEvent('cart:updated'));
 }
 
 document.querySelector('#cartItems')?.addEventListener('click', (event) => {

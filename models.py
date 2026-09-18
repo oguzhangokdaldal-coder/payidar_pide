@@ -16,6 +16,9 @@ class Order(db.Model):
     address = db.Column(db.String(400), nullable=False)
     note = db.Column(db.String(300), default="")
 
+    order_type = db.Column(db.String(20), default="teslimat")  # teslimat | gel_al
+    neighborhood = db.Column(db.String(50), nullable=True)  # yalnızca teslimat siparişlerinde dolu
+
     payment_method = db.Column(db.String(20), nullable=False)  # "online" | "kapida"
     payment_status = db.Column(db.String(20), default="pending")  # pending | paid | failed
     status = db.Column(db.String(20), default="alindi")  # onay_bekliyor | alindi | hazirlaniyor | yolda | teslim_edildi
