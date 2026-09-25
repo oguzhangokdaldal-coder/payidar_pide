@@ -1,0 +1,11 @@
+giriş yap butonu.
+kampanyalar ,üst kayar band,  menü (fiyatlar) admin oanleden düzenlenebilmeli(başka önerin varsa yap)+
+kulalnıcı girişi de olmalı. kulalnıcı giriş yaparak sipariş verirse bildirim atmak da kolay. mailini almış olacağız. +
+kampanya eklemede sipariş kısmıdna kampanyaların kuralı uygulanmalı. kampanya tarihi saati eklenmeli. kuralları belirlenmeli.+
+
+menüde resim  ekleme kısmı yok yapılması gerek. 
+siparişi yazıcıdan çıkarmak. 
+sipariş verilince yorum bırak butonu da görünecek müşteri yorum bırakabilecek.
+
+postgree ye taşı veritabanını. 
+
