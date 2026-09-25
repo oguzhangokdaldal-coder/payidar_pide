@@ -1,0 +1,105 @@
+{% from "_admin_macros.html" import admin_header %}
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Siparişler | Payidar Yönetim</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}" />
+</head>
+<body class="admin-body">
+  {{ admin_header('siparisler') }}
+  <main class="admin-main admin-main-board">
+    <h2>Siparişler <small>({{ total_count }})</small></h2>
+
+    <div class="period-tabs">
+      <a href="{{ url_for('admin_orders', donem='bugun') }}"{% if period == 'bugun' %} class="active"{% endif %}>Bugün</a>
+      <a href="{{ url_for('admin_orders', donem='hafta') }}"{% if period == 'hafta' %} class="active"{% endif %}>Bu Hafta</a>
+      <a href="{{ url_for('admin_orders', donem='tumu') }}"{% if period == 'tumu' %} class="active"{% endif %}>Tümü</a>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card"><span class="stat-value">{{ stats.total }}</span><span class="stat-label">Toplam Sipariş</span></div>
+      <div class="stat-card stat-success"><span class="stat-value">{{ stats.success }}</span><span class="stat-label">Başarılı (Teslim Edildi)</span></div>
+      <div class="stat-card stat-cancel"><span class="stat-value">{{ stats.cancelled }}</span><span class="stat-label">İptal</span></div>
+      <div class="stat-card stat-revenue"><span class="stat-value">{{ '%.0f'|format(stats.revenue_tl) }}₺</span><span class="stat-label">Ciro</span></div>
+      <div class="stat-card stat-loss"><span class="stat-value">{{ '%.0f'|format(stats.lost_tl) }}₺</span><span class="stat-label">İptalden Kayıp</span></div>
+    </div>
+
+    {% if not total_count %}
+      <p class="admin-empty">Bu dönemde sipariş yok.</p>
+    {% else %}
+    <div class="order-board">
+      {% for status in columns %}
+      <div class="order-column">
+        <div class="order-column-head">
+          <span class="admin-badge status-{{ status }}">{{ status_labels.get(status, status) }}</span>
+          <small>{{ orders_by_status[status]|length }}</small>
+        </div>
+        <div class="order-column-body">
+          {% if not orders_by_status[status] %}
+          <p class="order-column-empty">—</p>
+          {% endif %}
+          {% for order in orders_by_status[status] %}
+          <article class="admin-order-card{% if order.status == 'iptal' %} is-cancelled{% endif %}">
+            <div class="admin-order-head">
+              <strong>#{{ order.id }} — {{ order.customer_name }}</strong>
+              <span class="admin-badge pay-{{ order.payment_status }}">{{ order.payment_method }} · {{ order.payment_status }}</span>
+            </div>
+            <p class="admin-order-meta">
+              {{ order.created_at.strftime('%d.%m.%Y %H:%M') }} · <a href="tel:{{ order.phone|replace(' ', '') }}">{{ order.phone }}</a>
+            </p>
+            <p class="admin-order-type">
+              {% if order.order_type == 'gel_al' %}🏪 Gel Al{% else %}🛵 Teslimat{% if order.neighborhood %} · {{ zone_names.get(order.neighborhood, order.neighborhood) }}{% endif %}{% endif %}
+            </p>
+            {% if order.order_type != 'gel_al' %}<p class="admin-order-address">{{ order.address }}</p>{% endif %}
+            {% if order.note %}<p class="admin-order-note">Not: {{ order.note }}</p>{% endif %}
+            {% if order.status == 'iptal' and order.cancel_reason %}<p class="admin-order-cancel-reason">İptal sebebi: {{ order.cancel_reason }}</p>{% endif %}
+            <ul class="admin-order-items">
+              {% for item in order.items %}
+              <li>{{ item.quantity }}× {{ item.product_name }} — {{ '%.2f'|format(item.line_total_tl) }}₺</li>
+              {% endfor %}
+            </ul>
+            <div class="admin-order-total">Toplam: <strong>{{ '%.2f'|format(order.total_price_tl) }}₺</strong></div>
+            <div class="admin-order-actions">
+              {% if order.status == 'onay_bekliyor' %}
+              <span class="admin-confirm-code">Kod: {{ order.confirmation_code }}</span>
+              {% endif %}
+              {% for next_status in status_transitions.get(order.status, []) %}
+                {% if next_status == 'iptal' %}
+                <form method="post" action="{{ url_for('admin_update_order_status', order_id=order.id) }}" class="cancel-form" onsubmit="return handleCancelSubmit(this);">
+                  <input type="hidden" name="durum" value="iptal">
+                  <input type="hidden" name="sebep" value="">
+                  <button type="submit" class="status-btn status-btn-cancel">İptal et</button>
+                </form>
+                {% elif order.status == 'onay_bekliyor' %}
+                <form method="post" action="{{ url_for('admin_update_order_status', order_id=order.id) }}">
+                  <input type="hidden" name="durum" value="{{ next_status }}">
+                  <button type="submit" class="status-btn status-btn-primary">Onayla, kabul et</button>
+                </form>
+                {% else %}
+                <form method="post" action="{{ url_for('admin_update_order_status', order_id=order.id) }}">
+                  <input type="hidden" name="durum" value="{{ next_status }}">
+                  <button type="submit" class="status-btn status-btn-primary">{{ status_labels[next_status] }} →</button>
+                </form>
+                {% endif %}
+              {% endfor %}
+            </div>
+          </article>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </main>
+  <script>
+    function handleCancelSubmit(form) {
+      const reason = prompt('İptal sebebini yaz (örn. ürün tükendi, müşteri vazgeçti):', '');
+      if (reason === null) return false;
+      form.querySelector('input[name="sebep"]').value = reason;
+      return confirm('Bu siparişi iptal etmek istediğine emin misin?');
+    }
+  </script>
+</body>
+</html>

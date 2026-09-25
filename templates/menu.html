@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% from "_macros.html" import product_card %}
+{% block title %}Menü | Payidar Pide{% endblock %}
+{% block content %}
+<section class="menu-section" id="menu">
+  <div class="section-heading">
+    <div><p class="eyebrow">Seçtiklerimiz</p><h2>Menüden bir dilim<br><em>mutluluk.</em></h2></div>
+    <p class="section-intro">İyi malzeme, doğru ateş, sabırla hazırlanan tarifler. Favorini bul, gerisini bize bırak.</p>
+  </div>
+  <div class="category-tabs" role="tablist">
+    <button class="active" data-filter="all">Hepsi</button>
+    <button data-filter="pide">Pideler</button>
+    <button data-filter="izgara">Izgara Çeşitleri</button>
+    <button data-filter="durum">Dürüm Çeşitleri</button>
+    <button data-filter="icecek">İçecekler</button>
+  </div>
+  <div class="product-grid" id="productGrid">
+    {% for item in products %}
+    {{ product_card(item) }}
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

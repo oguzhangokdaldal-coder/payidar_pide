@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Siparişi Tamamla | Payidar Pide{% endblock %}
+{% block content %}
+<section class="checkout-section" id="checkout">
+  <div class="section-heading">
+    <div><p class="eyebrow">Son adım</p><h2>Siparişi<br><em>tamamla.</em></h2></div>
+    <p class="section-intro">Bilgilerini bırak, ödeme yöntemini seç, sofran hazırlansın.</p>
+  </div>
+  {% if not shop_open %}
+  <p class="closed-banner">
+    {% if force_closed %}🌙 Şu an kapalıyız. Yeniden ne zaman açılacağımızı buradan takip edebilirsin.
+    {% else %}🌙 Şu an kapalıyız. Çalışma saatlerimiz: {{ opening_str }}–{{ closing_str }}. Lütfen açılış saatinde tekrar dene.{% endif %}
+  </p>
+  {% endif %}
+  {% if not current_customer %}
+  <p class="guest-banner">👤 Hesabınla giriş yaparsan bilgilerin otomatik dolar, siparişlerini takip edebilirsin. <a href="{{ url_for('customer_login', next=url_for('checkout')) }}">Giriş yap</a> veya <a href="{{ url_for('customer_register') }}">kayıt ol</a> — istersen misafir olarak da devam edebilirsin.</p>
+  {% endif %}
+  <div class="checkout-grid">
+    <form class="checkout-form" id="checkoutForm" novalidate data-shop-open="{{ 'true' if shop_open else 'false' }}">
+      <label>Ad Soyad
+        <input type="text" name="customer_name" required autocomplete="name" value="{{ current_customer.name if current_customer else '' }}">
+      </label>
+      <label>Telefon
+        <input type="tel" name="phone" required autocomplete="tel" placeholder="05xx xxx xx xx" value="{{ current_customer.phone if current_customer else '' }}">
+      </label>
+
+      <fieldset class="payment-methods">
+        <legend>Sipariş türü</legend>
+        <label class="payment-option">
+          <input type="radio" name="order_type" value="teslimat" id="orderTypeDelivery" checked>
+          <span><strong>Adrese Teslimat</strong><small>Mahallene göre minimum sepet tutarı uygulanır</small></span>
+        </label>
+        <label class="payment-option">
+          <input type="radio" name="order_type" value="gel_al" id="orderTypePickup">
+          <span><strong>Gel Al</strong><small>Mağazamızdan kendin teslim alırsın, minimum tutar yok</small></span>
+        </label>
+      </fieldset>
+
+      <div id="deliveryFields">
+        <label>Mahalle
+          <div class="neighborhood-row">
+            <select name="neighborhood" id="neighborhoodSelect">
+              {% for zone in delivery_zones %}
+              <option value="{{ zone.slug }}" data-min="{{ zone.min_order }}" data-lat="{{ zone.lat }}" data-lng="{{ zone.lng }}">{{ zone.name }} — min. {{ zone.min_order }}₺</option>
+              {% endfor %}
+            </select>
+            <button type="button" id="useLocationBtn" class="location-btn">📍 Konumumu kullan</button>
+          </div>
+          <small id="minOrderNote"></small>
+        </label>
+        <label>Teslimat Adresi
+          <textarea name="address" id="addressField" required rows="3" autocomplete="street-address" placeholder="Mahalle, cadde/sokak, kapı no, kat/daire">{{ current_customer.address if current_customer else '' }}</textarea>
+        </label>
+      </div>
+
+      <label>Sipariş Notu <small>(opsiyonel)</small>
+        <textarea name="note" rows="2" placeholder="Zili çalmayın, kapıya bırakın vb."></textarea>
+      </label>
+
+      <fieldset class="payment-methods">
+        <legend>Ödeme yöntemi</legend>
+        <label class="payment-option">
+          <input type="radio" name="payment_method" value="kapida" checked>
+          <span><strong>Kapıda ödeme</strong><small>Nakit veya kart ile kapıda öde</small></span>
+        </label>
+        <label class="payment-option{% if not paytr_enabled %} disabled{% endif %}">
+          <input type="radio" name="payment_method" value="online" {% if not paytr_enabled %}disabled{% endif %}>
+          <span><strong>Online kart ile öde</strong><small>{% if paytr_enabled %}PayTR güvenli ödeme sayfasına yönlendirilirsin{% else %}Şu anda kullanılamıyor{% endif %}</small></span>
+        </label>
+      </fieldset>
+
+      <p class="form-error" id="formError" hidden></p>
+      <button class="primary-button" type="submit" id="submitOrder"{% if not shop_open %} disabled{% endif %}>{% if shop_open %}Siparişi onayla <span>→</span>{% else %}Şu an kapalıyız{% endif %}</button>
+    </form>
+
+    <aside class="order-summary" id="orderSummary" aria-label="Sipariş özeti"></aside>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='checkout.js') }}"></script>
+{% endblock %}

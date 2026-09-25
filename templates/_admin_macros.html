@@ -1,0 +1,13 @@
+{% macro admin_header(active) %}
+<header class="admin-header">
+  <h1>Payidar <span>Yönetim</span></h1>
+  <nav class="admin-header-links">
+    <a href="{{ url_for('admin_orders') }}"{% if active == 'siparisler' %} class="active"{% endif %}>Siparişler</a>
+    <a href="{{ url_for('admin_menu') }}"{% if active == 'menu' %} class="active"{% endif %}>Menü</a>
+    <a href="{{ url_for('admin_campaigns') }}"{% if active == 'kampanyalar' %} class="active"{% endif %}>Kampanyalar</a>
+    <a href="{{ url_for('admin_topline') }}"{% if active == 'bant' %} class="active"{% endif %}>Bant</a>
+    <a href="{{ url_for('admin_settings') }}"{% if active == 'ayarlar' %} class="active"{% endif %}>Ayarlar</a>
+    <a href="{{ url_for('admin_logout') }}">Çıkış yap</a>
+  </nav>
+</header>
+{% endmacro %}
