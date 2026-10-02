@@ -4,3 +4,5 @@ __pycache__/
 venv/
 instance/
 .env
+node_modules/
+video/out/
