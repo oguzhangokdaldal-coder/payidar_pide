@@ -3,3 +3,4 @@ Flask-SQLAlchemy
 python-dotenv
 tzdata
 gunicorn
+gunicorn>=21.0
